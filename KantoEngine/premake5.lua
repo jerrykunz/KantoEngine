@@ -5,7 +5,7 @@ project "KantoEngine"
 	staticruntime "off"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
+	objdir ("%{wks.location}/obj/" .. outputdir .. "/%{prj.name}")
 
 	pchheader "knpch.h"
 	pchsource "src/knpch.cpp"
@@ -32,7 +32,7 @@ project "KantoEngine"
 	includedirs
 	{
 		"src",
-		"vendor/spdlog/include",
+		--"vendor/spdlog/include",
 		--"%{IncludeDir.Box2D}",
 		--"%{IncludeDir.filewatch}",
 		"%{IncludeDir.GLFW}",
@@ -62,8 +62,8 @@ project "KantoEngine"
 		--"%{Library.mono}",
 	}
 
-	filter "files:vendor/ImGuizmo/**.cpp"
-	flags { "NoPCH" }
+	--filter "files:vendor/ImGuizmo/**.cpp"
+	--flags { "NoPCH" }
 
 	filter "system:windows"
 		systemversion "latest"
