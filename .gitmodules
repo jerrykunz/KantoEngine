@@ -1,0 +1,3 @@
+[submodule "KantoEngine/vendor/GLFW"]
+	path = KantoEngine/vendor/GLFW
+	url = https://github.com/jerrykunz/glfw.git
