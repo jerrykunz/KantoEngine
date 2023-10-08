@@ -72,13 +72,13 @@ project "KantoEngine"
 		{
 		}
 
-		links
-		{
-			"%{Library.WinSock}",
-			"%{Library.WinMM}",
-			"%{Library.WinVersion}",
-			"%{Library.BCrypt}",
-		}
+		--links
+		--{
+		--	"%{Library.WinSock}",
+		--	"%{Library.WinMM}",
+		--	"%{Library.WinVersion}",
+		--	"%{Library.BCrypt}",
+		--}
 
 	filter "configurations:Debug"
 		defines "KN_DEBUG"

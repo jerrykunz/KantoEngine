@@ -42,7 +42,7 @@ IncludeDir["glm"] = "%{wks.location}/KantoEgine/vendor/glm"
 --Library["SPIRV_Cross_GLSL_Release"] = "%{LibraryDir.VulkanSDK}/spirv-cross-glsl.lib"
 
 -- Windows
-Library["WinSock"] = "Ws2_32.lib"
-Library["WinMM"] = "Winmm.lib"
-Library["WinVersion"] = "Version.lib"
-Library["BCrypt"] = "Bcrypt.lib"
+--Library["WinSock"] = "Ws2_32.lib"
+--Library["WinMM"] = "Winmm.lib"
+--Library["WinVersion"] = "Version.lib"
+--Library["BCrypt"] = "Bcrypt.lib"

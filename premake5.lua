@@ -3,7 +3,7 @@ include "Dependencies.lua"
 
 workspace "KantoEngine"
 	architecture "x86_64"
-	startproject "KantoEngine"
+	startproject "Sandbox"
 
 	configurations
 	{
@@ -26,23 +26,23 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 	include "vendor/premake"
-	--include "Hazel/vendor/Box2D"
-	include "Hazel/vendor/GLFW"
-	include "Hazel/vendor/Glad"
-	--include "Hazel/vendor/msdf-atlas-gen"
-	--include "Hazel/vendor/imgui"
-	--include "Hazel/vendor/yaml-cpp"
+	--include "KantoEngine/vendor/Box2D"
+	include "KantoEngine/vendor/GLFW"
+	include "KantoEngine/vendor/Glad"
+	--include "KantoEngine/vendor/msdf-atlas-gen"
+	--include "KantoEngine/vendor/imgui"
+	--include "KantoEngine/vendor/yaml-cpp"
 group ""
 
 group "Core"
 	include "KantoEngine"
-	--include "Hazel-ScriptCore"
+	--include "KantoEngine-ScriptCore"
 group ""
 
 --group "Tools"
-	--include "Hazelnut"
+	--include "KantoEnginenut"
 --group ""
 
---group "Misc"
-	--include "Sandbox"
---group ""
+group "Misc"
+	include "Sandbox"
+group ""
