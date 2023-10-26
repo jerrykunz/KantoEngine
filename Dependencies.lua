@@ -4,27 +4,27 @@
 --VULKAN_SDK = os.getenv("VULKAN_SDK")
 
 IncludeDir = {}
-IncludeDir["stb_image"] = "%{wks.location}/KantoEgine/vendor/stb_image"
---IncludeDir["yaml_cpp"] = "%{wks.location}/KantoEgine/vendor/yaml-cpp/include"
---IncludeDir["Box2D"] = "%{wks.location}/KantoEgine/vendor/Box2D/include"
---IncludeDir["filewatch"] = "%{wks.location}/KantoEgine/vendor/filewatch"
-IncludeDir["GLFW"] = "%{wks.location}/KantoEgine/vendor/GLFW/include"
-IncludeDir["Glad"] = "%{wks.location}/KantoEgine/vendor/Glad/include"
---IncludeDir["ImGui"] = "%{wks.location}/KantoEgine/vendor/ImGui"
---IncludeDir["ImGuizmo"] = "%{wks.location}/KantoEgine/vendor/ImGuizmo"
-IncludeDir["glm"] = "%{wks.location}/KantoEgine/vendor/glm"
---IncludeDir["entt"] = "%{wks.location}/KantoEgine/vendor/entt/include"
---IncludeDir["mono"] = "%{wks.location}/KantoEgine/vendor/mono/include"
---IncludeDir["shaderc"] = "%{wks.location}/KantoEgine/vendor/shaderc/include"
---IncludeDir["SPIRV_Cross"] = "%{wks.location}/KantoEgine/vendor/SPIRV-Cross"
+IncludeDir["stb_image"] = "%{wks.location}/KantoEngine/vendor/stb_image"
+--IncludeDir["yaml_cpp"] = "%{wks.location}/KantoEngine/vendor/yaml-cpp/include"
+--IncludeDir["Box2D"] = "%{wks.location}/KantoEngine/vendor/Box2D/include"
+--IncludeDir["filewatch"] = "%{wks.location}/KantoEngine/vendor/filewatch"
+IncludeDir["GLFW"] = "%{wks.location}/KantoEngine/vendor/GLFW/include"
+IncludeDir["Glad"] = "%{wks.location}/KantoEngine/vendor/Glad/include"
+--IncludeDir["ImGui"] = "%{wks.location}/KantoEngine/vendor/ImGui"
+--IncludeDir["ImGuizmo"] = "%{wks.location}/KantoEngine/vendor/ImGuizmo"
+IncludeDir["glm"] = "%{wks.location}/KantoEngine/vendor/glm"
+--IncludeDir["entt"] = "%{wks.location}/KantoEngine/vendor/entt/include"
+--IncludeDir["mono"] = "%{wks.location}/KantoEngine/vendor/mono/include"
+--IncludeDir["shaderc"] = "%{wks.location}/KantoEngine/vendor/shaderc/include"
+--IncludeDir["SPIRV_Cross"] = "%{wks.location}/KantoEngine/vendor/SPIRV-Cross"
 --IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
---IncludeDir["msdfgen"] = "%{wks.location}/KantoEgine/vendor/msdf-atlas-gen/msdfgen"
---IncludeDir["msdf_atlas_gen"] = "%{wks.location}/KantoEgine/vendor/msdf-atlas-gen/msdf-atlas-gen"
+--IncludeDir["msdfgen"] = "%{wks.location}/KantoEngine/vendor/msdf-atlas-gen/msdfgen"
+--IncludeDir["msdf_atlas_gen"] = "%{wks.location}/KantoEngine/vendor/msdf-atlas-gen/msdf-atlas-gen"
 
 --LibraryDir = {}
 
 --LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
---LibraryDir["mono"] = "%{wks.location}/KantoEgine/vendor/mono/lib/%{cfg.buildcfg}"
+--LibraryDir["mono"] = "%{wks.location}/KantoEngine/vendor/mono/lib/%{cfg.buildcfg}"
 --
 --Library = {}
 --Library["mono"] = "%{LibraryDir.mono}/libmono-static-sgen.lib"

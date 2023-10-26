@@ -32,7 +32,7 @@ project "KantoEngine"
 	includedirs
 	{
 		"src",
-		--"vendor/spdlog/include",
+		"vendor/spdlog/include",
 		--"%{IncludeDir.Box2D}",
 		--"%{IncludeDir.filewatch}",
 		"%{IncludeDir.GLFW}",

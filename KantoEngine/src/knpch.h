@@ -22,11 +22,11 @@
 #include <unordered_map>
 #include <unordered_set>
 
-//#include "Hazel/Core/Base.h"
+#include "Kanto/Core/Base.h"
 
-//#include "Hazel/Core/Log.h"
+#include "Kanto/Core/Log.h"
 
-//#include "Hazel/Debug/Instrumentor.h"
+#include "Kanto/Debug/Instrumentor.h"
 
 #ifdef KN_PLATFORM_WINDOWS
 	#include <Windows.h>
