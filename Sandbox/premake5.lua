@@ -15,7 +15,7 @@ project "Sandbox"
 
 	includedirs
 	{
-		"%{wks.location}/Hazel/vendor/spdlog/include",
+		"%{wks.location}/KantoEngine/vendor/spdlog/include",
 		"%{wks.location}/KantoEngine/src",
 		"%{wks.location}/KantoEngine/vendor",
 		"%{IncludeDir.glm}",

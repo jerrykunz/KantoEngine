@@ -5,9 +5,10 @@
 
 #include <GLFW/glfw3.h>
 
-namespace Kanto {
+namespace Kanto 
+{
 
-	class GlfwWindow : public Window
+	class WindowsWindow : public Window
 	{
 	public:
 		WindowsWindow(const WindowProps& props);

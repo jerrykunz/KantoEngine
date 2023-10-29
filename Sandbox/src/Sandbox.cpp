@@ -1,5 +1,5 @@
-#include "Application.h"
-#include "EntryPoint.h"
+#include "Kanto.h"
+#include "Kanto/Core/EntryPoint.h"
 
 namespace Kanto
 {

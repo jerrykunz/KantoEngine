@@ -20,21 +20,21 @@ namespace Kanto {
 		KN_CORE_ERROR("GLFW Error ({0}): {1}", error, description);
 	}
 
-	GlfwWindow::GlfwWindow(const WindowProps& props)
+	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
 		KN_PROFILE_FUNCTION();
 
 		Init(props);
 	}
 
-	GlfwWindow::~GlfwWindow()
+	WindowsWindow::~WindowsWindow()
 	{
 		KN_PROFILE_FUNCTION();
 
 		Shutdown();
 	}
 
-	void GlfwWindow::Init(const WindowProps& props)
+	void WindowsWindow::Init(const WindowProps& props)
 	{
 		KN_PROFILE_FUNCTION();
 
@@ -159,7 +159,7 @@ namespace Kanto {
 			});
 	}
 
-	void GlfwWindow::Shutdown()
+	void WindowsWindow::Shutdown()
 	{
 		KN_PROFILE_FUNCTION();
 
@@ -172,7 +172,7 @@ namespace Kanto {
 		}
 	}
 
-	void GlfwWindow::OnUpdate()
+	void WindowsWindow::OnUpdate()
 	{
 		KN_PROFILE_FUNCTION();
 
@@ -180,7 +180,7 @@ namespace Kanto {
 		m_Context->SwapBuffers();
 	}
 
-	void GlfwWindow::SetVSync(bool enabled)
+	void WindowsWindow::SetVSync(bool enabled)
 	{
 		KN_PROFILE_FUNCTION();
 
@@ -192,7 +192,7 @@ namespace Kanto {
 		m_Data.VSync = enabled;
 	}
 
-	bool GlfwWindow::IsVSync() const
+	bool WindowsWindow::IsVSync() const
 	{
 		return m_Data.VSync;
 	}

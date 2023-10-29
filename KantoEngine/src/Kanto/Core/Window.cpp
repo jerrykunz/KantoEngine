@@ -9,7 +9,7 @@ namespace Kanto
 {
 	Scope<Window> Window::Create(const WindowProps& props)
 	{
-#ifdef HZ_PLATFORM_WINDOWS
+#ifdef KN_PLATFORM_WINDOWS
 		return CreateScope<WindowsWindow>(props);
 #else
 		KN_CORE_ASSERT(false, "Unknown platform!");

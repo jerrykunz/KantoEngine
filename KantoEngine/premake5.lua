@@ -53,11 +53,11 @@ project "KantoEngine"
 	{
 		--"Box2D",
 		"GLFW",
-		"Glad"
+		"Glad",
 		--"ImGui",
 		--"msdf-atlas-gen",
 		--"yaml-cpp",
-		--"opengl32.lib",
+		"opengl32.lib"
 		
 		--"%{Library.mono}",
 	}
