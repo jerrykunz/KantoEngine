@@ -1,4 +1,6 @@
+//Necessary includes for client app in Kanto.h
 #include "Kanto.h"
+//main function is in entry point
 #include "Kanto/Core/EntryPoint.h"
 
 namespace Kanto
