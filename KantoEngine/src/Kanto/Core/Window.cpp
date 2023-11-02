@@ -2,7 +2,7 @@
 #include "Kanto/Core/Window.h"
 
 #ifdef KN_PLATFORM_WINDOWS
-#include "Platform/GLFW/GlfwWindow.h"
+#include "Kanto/Platform/GLFW/GlfwWindow.h"
 #endif
 
 namespace Kanto

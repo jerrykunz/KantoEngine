@@ -1,5 +1,5 @@
 #include "knpch.h"
-#include "Platform/GLFW/GlfwWindow.h"
+#include "Kanto/Platform/GLFW/GlfwWindow.h"
 
 #include "Kanto/Core/Input.h"
 
@@ -9,7 +9,7 @@
 
 #include "Kanto/Renderer/Renderer.h"
 
-#include "Platform/OpenGL/OpenGLContext.h"
+#include "Kanto/Platform/OpenGL/OpenGLContext.h"
 
 namespace Kanto {
 
