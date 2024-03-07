@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Kanto/Core/Base.h"
 #include "Kanto/Renderer/RendererAPI.h"
 
 namespace Kanto {

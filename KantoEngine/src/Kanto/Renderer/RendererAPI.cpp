@@ -1,7 +1,6 @@
 #include "knpch.h"
 #include "Kanto/Renderer/RendererAPI.h"
-
-#include "Platform/OpenGL/OpenGLRendererAPI.h"
+#include "Kanto/Platform/OpenGL/OpenGLRendererAPI.h"
 
 namespace Kanto {
 
