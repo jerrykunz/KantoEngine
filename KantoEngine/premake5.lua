@@ -70,6 +70,7 @@ project "KantoEngine"
 
 		defines
 		{
+		 "KN_PLATFORM_WINDOWS",
 		}
 
 		--links

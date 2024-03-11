@@ -1,37 +1,44 @@
 #pragma once
 
-#include "Kanto/Core/PlatformDetection.h"
-
 #include <memory>
 
-#ifdef KN_DEBUG
-	#if defined(KN_PLATFORM_WINDOWS)
-		#define KN_DEBUGBREAK() __debugbreak()
-	#elif defined(KN_PLATFORM_LINUX)
-		#include <signal.h>
-		#define KN_DEBUGBREAK() raise(SIGTRAP)
-	#else
-		#error "Platform doesn't support debugbreak yet!"
-	#endif
-	#define KN_ENABLE_ASSERTS
-#else
-	#define KN_DEBUGBREAK()
-#endif
-
-//really complex, used when calling macros that call macros, that call macros
-//basically it defines when the macro is "expanded", AKA when the value is set 
-#define KN_EXPAND_MACRO(x) x
-
-//can turn the value into a const char* string, doesn't work for everything. Function names don't work for example.
-#define KN_STRINGIFY_MACRO(x) #x
-
-#define BIT(x) (1 << x)
-
-//creates lamda functions out of class member functions, must be called in the same class
-#define KN_BIND_EVENT_FN(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
+//refs are here in Base.h
+//#include "Ref.h"
 
 namespace Kanto {
 
+	void InitializeCore();
+	void ShutdownCore();
+
+}
+
+#if !defined(KN_PLATFORM_WINDOWS) && !defined(KN_PLATFORM_LINUX)
+#error Unknown platform.
+#endif
+
+#define BIT(x) (1u << x)
+
+#if defined(__clang__)
+#define KN_COMPILER_CLANG
+#elif defined(_MSC_VER)
+#define KN_COMPILER_MSVC
+#endif
+
+#define KN_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
+#ifdef KN_COMPILER_MSVC
+#define KN_FORCE_INLINE __forceinline
+#elif defined(KN_COMPILER_CLANG)
+#define KN_FORCE_INLINE __attribute__((always_inline)) inline
+#else
+#define KN_FORCE_INLINE inline
+#endif
+
+#include "Assert.h"
+
+namespace Kanto {
+
+	// Pointer wrappers
 	template<typename T>
 	using Scope = std::unique_ptr<T>;
 	template<typename T, typename ... Args>
@@ -48,7 +55,46 @@ namespace Kanto {
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
 
-}
+	template<typename T>
+	using WeakRef = std::weak_ptr<T>;
 
-#include "Kanto/Core/Log.h"
-#include "Kanto/Core/Assert.h"
+
+	using byte = uint8_t;
+
+	/** A simple wrapper for std::atomic_flag to avoid confusing
+		function names usage. The object owning it can still be
+		default copyable, but the copied flag is going to be reset.
+	*/
+	struct AtomicFlag
+	{
+		KN_FORCE_INLINE void SetDirty() { flag.clear(); }
+		KN_FORCE_INLINE bool CheckAndResetIfDirty() { return !flag.test_and_set(); }
+
+		explicit AtomicFlag() noexcept { flag.test_and_set(); }
+		AtomicFlag(const AtomicFlag&) noexcept {}
+		AtomicFlag& operator=(const AtomicFlag&) noexcept { return *this; }
+		AtomicFlag(AtomicFlag&&) noexcept {};
+		AtomicFlag& operator=(AtomicFlag&&) noexcept { return *this; }
+
+	private:
+		std::atomic_flag flag;
+	};
+
+	struct Flag
+	{
+		KN_FORCE_INLINE void SetDirty() noexcept { flag = true; }
+		KN_FORCE_INLINE bool CheckAndResetIfDirty() noexcept
+		{
+			if (flag)
+				return !(flag = !flag);
+			else
+				return false;
+		}
+
+		KN_FORCE_INLINE bool IsDirty() const noexcept { return flag; }
+
+	private:
+		bool flag = false;
+	};
+
+}

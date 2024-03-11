@@ -14,7 +14,7 @@ namespace Kanto {
 		const char* message,
 		const void* userParam)
 	{
-		switch (severity)
+		/*switch (severity)
 		{
 		case GL_DEBUG_SEVERITY_HIGH:         KN_CORE_CRITICAL(message); return;
 		case GL_DEBUG_SEVERITY_MEDIUM:       KN_CORE_ERROR(message); return;
@@ -22,7 +22,7 @@ namespace Kanto {
 		case GL_DEBUG_SEVERITY_NOTIFICATION: KN_CORE_TRACE(message); return;
 		}
 
-		KN_CORE_ASSERT(false, "Unknown severity level!");
+		KN_CORE_ASSERT(false, "Unknown severity level!");*/
 	}
 
 	void OpenGLRendererAPI::Init()

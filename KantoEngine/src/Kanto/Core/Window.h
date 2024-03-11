@@ -2,46 +2,87 @@
 
 #include "Kanto/Core/Base.h"
 #include "Kanto/Events/Event.h"
+#include "Kanto/Renderer/GraphicsContext.h"
+
+#include <GLFW/glfw3.h>
 
 #include <sstream>
+#include <filesystem>
+
+#include "Kanto/Core/RenderContext.h"
 
 namespace Kanto {
 
-	struct WindowProps
+	struct WindowSpecification
 	{
-		std::string Title;
-		uint32_t Width;
-		uint32_t Height;
-
-		WindowProps(const std::string& title = "Kanto Engine",
-			uint32_t width = 1600,
-			uint32_t height = 900)
-			: Title(title), Width(width), Height(height)
-		{
-		}
+		std::string Title = "Hazel";
+		uint32_t Width = 1600;
+		uint32_t Height = 900;
+		bool Decorated = true;
+		bool Fullscreen = false;
+		bool VSync = true;
+		std::filesystem::path IconPath;
 	};
 
-	// Interface representing a desktop system based Window
+	class VulkanSwapChain;
+
 	class Window
 	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
 
-		virtual ~Window() = default;
+		Window(const WindowSpecification& specification);
+		virtual ~Window();
 
-		virtual void OnUpdate() = 0;
+		virtual void Init();
+		virtual void ProcessEvents();
+		virtual void SwapBuffers();
 
-		virtual uint32_t GetWidth() const = 0;
-		virtual uint32_t GetHeight() const = 0;
+		inline uint32_t GetWidth() const { return m_Data.Width; }
+		inline uint32_t GetHeight() const { return m_Data.Height; }
+
+		virtual std::pair<uint32_t, uint32_t> GetSize() const { return { m_Data.Width, m_Data.Height }; }
+		virtual std::pair<float, float> GetWindowPos() const;
 
 		// Window attributes
-		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
-		virtual void SetVSync(bool enabled) = 0;
-		virtual bool IsVSync() const = 0;
+		virtual void SetEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
+		virtual void SetVSync(bool enabled);
+		virtual bool IsVSync() const;
+		virtual void SetResizable(bool resizable) const;
 
-		virtual void* GetNativeWindow() const = 0;
+		virtual void Maximize();
+		virtual void CenterWindow();
 
-		static Scope<Window> Create(const WindowProps& props = WindowProps());
+		virtual const std::string& GetTitle() const { return m_Data.Title; }
+		virtual void SetTitle(const std::string& title);
+
+		inline void* GetNativeWindow() const { return m_Window; }
+
+		virtual Ref<RendererContext> GetRenderContext() { return m_RendererContext; }
+		virtual VulkanSwapChain& GetSwapChain();
+
+	public:
+		static Window* Create(const WindowSpecification& specification = WindowSpecification());
+
+	private:
+		virtual void Shutdown();
+	private:
+		GLFWwindow* m_Window;
+		GLFWcursor* m_ImGuiMouseCursors[9] = { 0 };
+		WindowSpecification m_Specification;
+		struct WindowData
+		{
+			std::string Title;
+			uint32_t Width, Height;
+
+			EventCallbackFn EventCallback;
+		};
+
+		WindowData m_Data;
+		float m_LastFrameTime = 0.0f;
+
+		Ref<RendererContext> m_RendererContext;
+		VulkanSwapChain* m_SwapChain;
 	};
 
 }
