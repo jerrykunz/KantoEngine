@@ -1,15 +1,19 @@
 #pragma once
 
 #include "Kanto/Core/Base.h"
-#include "Kanto/Events/Event.h"
+#include "Kanto/Core/Events/Event.h"
 #include "Kanto/Renderer/GraphicsContext.h"
 
-#include <GLFW/glfw3.h>
+//#define GLFW_INCLUDE_VULKAN
+//#include <GLFW/glfw3.h>
 
 #include <sstream>
 #include <filesystem>
 
 #include "Kanto/Core/RenderContext.h"
+
+#include "Kanto/Platform/Vulkan/VulkanContext.h"
+#include "Kanto/Platform/Vulkan/VulkanSwapChain.h"
 
 namespace Kanto {
 
@@ -58,7 +62,7 @@ namespace Kanto {
 
 		inline void* GetNativeWindow() const { return m_Window; }
 
-		virtual Ref<RendererContext> GetRenderContext() { return m_RendererContext; }
+		virtual Ref<VulkanContext> GetRenderContext() { return m_RendererContext; }
 		virtual VulkanSwapChain& GetSwapChain();
 
 	public:
@@ -81,7 +85,8 @@ namespace Kanto {
 		WindowData m_Data;
 		float m_LastFrameTime = 0.0f;
 
-		Ref<RendererContext> m_RendererContext;
+		//Ref<RendererContext> m_RendererContext;
+		Ref<VulkanContext> m_RendererContext;
 		VulkanSwapChain* m_SwapChain;
 	};
 

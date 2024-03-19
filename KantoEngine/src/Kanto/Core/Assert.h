@@ -40,8 +40,10 @@
 #define KN_CORE_VERIFY_MESSAGE_INTERNAL(...)  ::Kanto::Log::PrintAssertMessage(::Kanto::Log::Type::Core, "Verify Failed", ##__VA_ARGS__)
 #define KN_VERIFY_MESSAGE_INTERNAL(...)  ::Kanto::Log::PrintAssertMessage(::Kanto::Log::Type::Client, "Verify Failed", ##__VA_ARGS__)
 #else
-#define KN_CORE_VERIFY_MESSAGE_INTERNAL(...)  ::Kanto::Log::PrintAssertMessage(::Kanto::Log::Type::Core, "Verify Failed" __VA_OPT__(,) __VA_ARGS__)
-#define KN_VERIFY_MESSAGE_INTERNAL(...)  ::Kanto::Log::PrintAssertMessage(::Kanto::Log::Type::Client, "Verify Failed" __VA_OPT__(,) __VA_ARGS__)
+//#define KN_CORE_VERIFY_MESSAGE_INTERNAL(...)  ::Kanto::Log::PrintAssertMessage(::Kanto::Log::Type::Core, "Verify Failed" __VA_OPT__(,) __VA_ARGS__)
+//#define KN_VERIFY_MESSAGE_INTERNAL(...)  ::Kanto::Log::PrintAssertMessage(::Kanto::Log::Type::Client, "Verify Failed" __VA_OPT__(,) __VA_ARGS__)
+#define KN_CORE_VERIFY_MESSAGE_INTERNAL(...)  ::Kanto::Log::PrintAssertMessage(::Kanto::Log::Type::Core, "Verify Failed", ##__VA_ARGS__)
+#define KN_VERIFY_MESSAGE_INTERNAL(...)  ::Kanto::Log::PrintAssertMessage(::Kanto::Log::Type::Client, "Verify Failed", ##__VA_ARGS__)
 #endif
 
 #define KN_CORE_VERIFY(condition, ...) { if(!(condition)) { KN_CORE_VERIFY_MESSAGE_INTERNAL(__VA_ARGS__); KN_DEBUG_BREAK; } }

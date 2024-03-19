@@ -18,6 +18,10 @@ project "KantoEngine"
 		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.inl",
+		"vendor/choc/**.h",
+		"vendor/yaml-cpp/src/**.cpp",
+		"vendor/yaml-cpp/src/**.h",
+		"vendor/yaml-cpp/include/**.h",
 
 		--"vendor/ImGuizmo/ImGuizmo.h",
 		--"vendor/ImGuizmo/ImGuizmo.cpp"
@@ -32,12 +36,16 @@ project "KantoEngine"
 	includedirs
 	{
 		"src",
-		"vendor/spdlog/include",
+		"%{IncludeDir.spdlog}",
+		"%{IncludeDir.choc}",
+		"%{IncludeDir.tracy}",
+		"%{IncludeDir.nfd}",
+		"%{IncludeDir.yaml}",
 		--"%{IncludeDir.Box2D}",
 		--"%{IncludeDir.filewatch}",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.Glad}",
-		--"%{IncludeDir.ImGui}",
+		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		--"%{IncludeDir.msdfgen}",
 		--"%{IncludeDir.msdf_atlas_gen}",
@@ -46,15 +54,17 @@ project "KantoEngine"
 		--"%{IncludeDir.mono}",
 		--"%{IncludeDir.yaml_cpp}",
 		--"%{IncludeDir.ImGuizmo}",
-		--"%{IncludeDir.VulkanSDK}"
+		"%{IncludeDir.VulkanSDK}"
 	}
 
 	links
 	{
 		--"Box2D",
 		"GLFW",
+		"nfd",
+		"tracy",
 		"Glad",
-		--"ImGui",
+		"ImGui",
 		--"msdf-atlas-gen",
 		--"yaml-cpp",
 		"opengl32.lib"
@@ -64,6 +74,9 @@ project "KantoEngine"
 
 	--filter "files:vendor/ImGuizmo/**.cpp"
 	--flags { "NoPCH" }
+	
+	filter "files:vendor/yaml-cpp/src/**.cpp or files:vendor/imgui/misc/cpp/imgui_stdlib.cpp"
+	flags { "NoPCH" }
 
 	filter "system:windows"
 		systemversion "latest"

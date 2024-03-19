@@ -28,6 +28,10 @@
 
 #include "Kanto/Debug/Instrumentor.h"
 
+#include <Kanto/Core/Events/Event.h>
+
+#include <Kanto/Core/Memory.h>
+
 #ifdef KN_PLATFORM_WINDOWS
 	#include <Windows.h>
 #endif

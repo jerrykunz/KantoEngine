@@ -1,27 +1,41 @@
 #pragma once
-#include "knpch.h"
-#include "Kanto/Core/Base.h"
-#include "Application.h"
 
-#ifdef KN_PLATFORM_WINDOWS
+#include "Kanto/Core/Application.h"
 
-extern Kanto::Application* Kanto::CreateApplication(ApplicationCommandLineArgs args);
+extern Kanto::Application* Kanto::CreateApplication(int argc, char** argv);
+bool g_ApplicationRunning = true;
+
+namespace Kanto 
+{
+
+	int Main(int argc, char** argv)
+	{
+		while (g_ApplicationRunning)
+		{
+			InitializeCore();
+			Application* app = CreateApplication(argc, argv);
+			KN_CORE_ASSERT(app, "Client Application is null!");
+			app->Run();
+			delete app;
+			ShutdownCore();
+		}
+		return 0;
+	}
+
+}
+
+#if HZ_DIST && HZ_PLATFORM_WINDOWS
+
+int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
+{
+	return Hazel::Main(__argc, __argv);
+}
+
+#else
 
 int main(int argc, char** argv)
 {
-	Kanto::Log::Init();
-
-	KN_PROFILE_BEGIN_SESSION("Startup", "KantoProfile-Startup.json");
-	auto app = Kanto::CreateApplication({ argc, argv });
-	KN_PROFILE_END_SESSION();
-
-	KN_PROFILE_BEGIN_SESSION("Runtime", "KantoProfile-Runtime.json");
-	app->Run();
-	KN_PROFILE_END_SESSION();
-
-	KN_PROFILE_BEGIN_SESSION("Shutdown", "KantoProfile-Shutdown.json");
-	delete app;
-	KN_PROFILE_END_SESSION();
+	return Kanto::Main(argc, argv);
 }
 
-#endif
+#endif // HZ_DIST

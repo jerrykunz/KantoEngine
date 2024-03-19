@@ -1,18 +1,20 @@
 #include "knpch.h"
 #include "Window.h"
 
-#include "Kanto/Events/ApplicationEvent.h"
-#include "Kanto/Events/KeyEvent.h"
-#include "Kanto/Events/MouseEvent.h"
-//#include "Kanto/Input.h"
+#include "Kanto/Core/Events/ApplicationEvent.h"
+#include "Kanto/Core/Events/KeyEvent.h"
+#include "Kanto/Core/Events/MouseEvent.h"
+#include "Kanto/Core/Input.h"
 
 #include "Kanto/Renderer/RendererAPI.h"
 
-//#include "Kanto/Platform/Vulkan/VulkanContext.h"
-//#include "Kanto/Platform/Vulkan/VulkanSwapChain.h"
+#include "Kanto/Platform/Vulkan/VulkanContext.h"
+#include "Kanto/Platform/Vulkan/VulkanSwapChain.h"
 
-//#include <imgui.h>
+#include <imgui.h>
 #include "stb_image.h"
+
+
 
 namespace Kanto 
 {
@@ -60,6 +62,7 @@ namespace Kanto
 		}
 
 		//fix this later, uncomment and so on
+		//we'll use vulkan in any case, so this is moot
 		//if (RendererAPI::Current() == RendererAPIType::Vulkan)
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
@@ -114,16 +117,19 @@ namespace Kanto
 		}
 
 		// Create Renderer Context
-		m_RendererContext = RendererContext::Create();
-		m_RendererContext->Init();
+		/*m_RendererContext = RendererContext::Create();
+		m_RendererContext->Init();*/
 
-		Ref<VulkanContext> context = m_RendererContext.As<VulkanContext>();
+		m_RendererContext = CreateRef<VulkanContext>(m_Window, "Kanto", "lol", m_Specification.VSync); 
 
-		m_SwapChain = hnew VulkanSwapChain();
-		m_SwapChain->Init(VulkanContext::GetInstance(), context->GetDevice());
+		//Ref<VulkanContext> context = m_RendererContext.As<VulkanContext>();
+
+		m_SwapChain = m_RendererContext->SwapChain;
+
+		/*m_SwapChain->Init(VulkanContext::GetInstance(), context->GetDevice());
 		m_SwapChain->InitSurface(m_Window);
+		m_SwapChain->Create(&m_Data.Width, &m_Data.Height, m_Specification.VSync);*/
 
-		m_SwapChain->Create(&m_Data.Width, &m_Data.Height, m_Specification.VSync);
 		//glfwMaximizeWindow(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 
@@ -265,9 +271,12 @@ namespace Kanto
 
 	void Window::Shutdown()
 	{
+		/*
 		m_SwapChain->Destroy();
 		hdelete m_SwapChain;
 		m_RendererContext.As<VulkanContext>()->GetDevice()->Destroy(); // need to destroy the device _before_ windows window destructor destroys the renderer context (because device Destroy() asks for renderer context...)
+		*/
+
 		glfwTerminate();
 		s_GLFWInitialized = false;
 	}
@@ -287,18 +296,18 @@ namespace Kanto
 
 	void Window::SwapBuffers()
 	{
-		m_SwapChain->Present();
+		//m_SwapChain->Present();
 	}
 
 	void Window::SetVSync(bool enabled)
 	{
-		m_Specification.VSync = enabled;
+		/*m_Specification.VSync = enabled;
 
 		Application::Get().QueueEvent([&]()
 			{
 				m_SwapChain->SetVSync(m_Specification.VSync);
 				m_SwapChain->OnResize(m_Specification.Width, m_Specification.Height);
-			});
+			});*/
 	}
 
 	bool Window::IsVSync() const

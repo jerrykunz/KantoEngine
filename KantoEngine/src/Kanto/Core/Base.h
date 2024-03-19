@@ -5,16 +5,15 @@
 //refs are here in Base.h
 //#include "Ref.h"
 
-namespace Kanto {
-
+namespace Kanto 
+{
 	void InitializeCore();
 	void ShutdownCore();
-
 }
 
-#if !defined(KN_PLATFORM_WINDOWS) && !defined(KN_PLATFORM_LINUX)
-#error Unknown platform.
-#endif
+//#if !defined(KN_PLATFORM_WINDOWS) && !defined(KN_PLATFORM_LINUX)
+//#error Unknown platform.
+//#endif
 
 #define BIT(x) (1u << x)
 
