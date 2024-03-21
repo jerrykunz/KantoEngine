@@ -4,6 +4,8 @@
 #include "Kanto/Core/Events/Event.h"
 #include "Kanto/Renderer/GraphicsContext.h"
 
+#include "Kanto/Platform/Vulkan/VulkanContext.h"
+
 #include <sstream>
 #include <filesystem>
 
@@ -59,8 +61,8 @@ namespace Kanto
 
 		inline void* GetNativeWindow() const { return m_Window; }
 
-		//virtual Ref<VulkanContext> GetRenderContext() { return m_RendererContext; }
-		//virtual VulkanSwapChain& GetSwapChain();
+		virtual Ref<VulkanContext> GetRenderContext() { return m_RendererContext; }
+		virtual VulkanSwapChain& GetSwapChain();
 
 	public:
 		static Window* Create(const WindowSpecification& specification = WindowSpecification());
@@ -83,8 +85,8 @@ namespace Kanto
 		float m_LastFrameTime = 0.0f;
 
 		//Ref<RendererContext> m_RendererContext;
-		//Ref<VulkanContext> m_RendererContext;
-		//VulkanSwapChain* m_SwapChain;
+		Ref<VulkanContext> m_RendererContext;
+		VulkanSwapChain* m_SwapChain;
 	};
 
 }

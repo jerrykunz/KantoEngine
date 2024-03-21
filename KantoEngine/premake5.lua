@@ -30,13 +30,14 @@ project "KantoEngine"
 	defines
 	{
 		"_CRT_SECURE_NO_WARNINGS",
-		"GLFW_INCLUDE_NONE"
+		"GLFW_INCLUDE_VULKAN"
 	}
 
 	includedirs
 	{
 		"src",
 		"%{IncludeDir.spdlog}",
+		--"vendor/spdlog/include",
 		"%{IncludeDir.choc}",
 		"%{IncludeDir.tracy}",
 		"%{IncludeDir.nfd}",
@@ -44,7 +45,7 @@ project "KantoEngine"
 		--"%{IncludeDir.Box2D}",
 		--"%{IncludeDir.filewatch}",
 		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.Glad}",
+		--"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
 		--"%{IncludeDir.msdfgen}",
@@ -54,23 +55,19 @@ project "KantoEngine"
 		--"%{IncludeDir.mono}",
 		--"%{IncludeDir.yaml_cpp}",
 		--"%{IncludeDir.ImGuizmo}",
-		"%{IncludeDir.VulkanSDK}"
+		"%{IncludeDir.VulkanSDK}",
+		--"vendor",
 	}
 
 	--should be the same as the dependency project name in VS, capitalization doesn't seem to matter (tracy vs Tracy)
 	links
 	{
-		--"Box2D",
 		"GLFW",
 		"NFD-Extended",
-		"tracy",
-		"Glad",
+		"Tracy",
+		--"Glad",
 		"ImGui",
-		--"msdf-atlas-gen",
-		--"yaml-cpp",
-		"opengl32.lib"
-		
-		--"%{Library.mono}",
+		"%{Library.Vulkan}"
 	}
 
 	--filter "files:vendor/ImGuizmo/**.cpp"

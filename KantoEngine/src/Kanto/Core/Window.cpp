@@ -119,17 +119,17 @@ namespace Kanto
 		/*m_RendererContext = RendererContext::Create();
 		m_RendererContext->Init();*/
 
-		//m_RendererContext = CreateRef<VulkanContext>(m_Window, "Kanto", "lol", m_Specification.VSync); 
+		m_RendererContext = CreateRef<VulkanContext>(m_Window, "Kanto", "lol", m_Specification.VSync); 
 
-		//Ref<VulkanContext> context = m_RendererContext.As<VulkanContext>();
+		Ref<VulkanContext> context = m_RendererContext;// .As<VulkanContext>();
 
-		//m_SwapChain = m_RendererContext->SwapChain;
+		m_SwapChain = m_RendererContext->SwapChain;
 
 		/*m_SwapChain->Init(VulkanContext::GetInstance(), context->GetDevice());
 		m_SwapChain->InitSurface(m_Window);
 		m_SwapChain->Create(&m_Data.Width, &m_Data.Height, m_Specification.VSync);*/
 
-		//glfwMaximizeWindow(m_Window);
+		glfwMaximizeWindow(m_Window);
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 
 		bool isRawMouseMotionSupported = glfwRawMouseMotionSupported();
@@ -338,9 +338,9 @@ namespace Kanto
 		glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
 	}
 
-	/*VulkanSwapChain& Window::GetSwapChain()
+	VulkanSwapChain& Window::GetSwapChain()
 	{
 		return *m_SwapChain;
-	}*/
+	}
 
 }
