@@ -7,3 +7,12 @@
 [submodule "KantoEngine/vendor/spdlog"]
 	path = KantoEngine/vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "KantoEngine/vendor/imgui"]
+	path = KantoEngine/vendor/imgui
+	url = https://github.com/jerrykunz/imgui
+[submodule "KantoEngine/vendor/tracy/tracy"]
+	path = KantoEngine/vendor/tracy/tracy
+	url = https://github.com/wolfpld/tracy.git
+[submodule "KantoEngine/vendor/NFD-Extended/NFD-Extended"]
+	path = KantoEngine/vendor/NFD-Extended/NFD-Extended
+	url = https://github.com/btzy/nativefiledialog-extended.git
