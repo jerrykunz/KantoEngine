@@ -19,6 +19,8 @@ project "Sandbox"
 		"%{wks.location}/KantoEngine/src",
 		"%{wks.location}/KantoEngine/vendor",
 		"%{IncludeDir.glm}",
+		"%{wks.location}/KantoEngine/vendor/GLFW/include",
+		"%{IncludeDir.VulkanSDK}"
 		--"%{IncludeDir.entt}"
 	}
 

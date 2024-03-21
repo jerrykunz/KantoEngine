@@ -11,7 +11,7 @@ namespace Kanto
 		Sandbox(const ApplicationSpecification& specification)
 			: Application(specification)
 		{
-			// PushLayer(new ExampleLayer());
+			 PushLayer(new Layer());
 			//PushLayer(new Sandbox2D());
 		}
 
@@ -20,12 +20,12 @@ namespace Kanto
 		}
 	};
 
-	Application* Kanto::CreateApplication(ApplicationCommandLineArgs args)
+	Application* Kanto::CreateApplication(int argc, char** argv)
 	{
 		ApplicationSpecification spec;
 		spec.Name = "Sandbox";
 		spec.WorkingDirectory = "../KantoEngine";
-		spec.CommandLineArgs = args;
+		//spec.CommandLineArgs = args;
 
 		return new Sandbox(spec);
 	}

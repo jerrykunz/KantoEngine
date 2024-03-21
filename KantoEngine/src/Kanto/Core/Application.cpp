@@ -5,7 +5,9 @@
 //#include "Kanto/Renderer/Framebuffer.h"
 //#include "Kanto/Renderer/UI/Font.h"
 
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
 #include <imgui.h>
 #include "Kanto/ImGui/Colors.h"
 

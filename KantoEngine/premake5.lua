@@ -57,11 +57,12 @@ project "KantoEngine"
 		"%{IncludeDir.VulkanSDK}"
 	}
 
+	--should be the same as the dependency project name in VS, capitalization doesn't seem to matter (tracy vs Tracy)
 	links
 	{
 		--"Box2D",
 		"GLFW",
-		"nfd",
+		"NFD-Extended",
 		"tracy",
 		"Glad",
 		"ImGui",

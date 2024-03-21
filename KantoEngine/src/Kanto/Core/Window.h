@@ -4,18 +4,14 @@
 #include "Kanto/Core/Events/Event.h"
 #include "Kanto/Renderer/GraphicsContext.h"
 
-//#define GLFW_INCLUDE_VULKAN
-//#include <GLFW/glfw3.h>
-
 #include <sstream>
 #include <filesystem>
 
-#include "Kanto/Core/RenderContext.h"
+#define GLFW_INCLUDE_VULKAN
+#include "GLFW/glfw3.h"
 
-#include "Kanto/Platform/Vulkan/VulkanContext.h"
-#include "Kanto/Platform/Vulkan/VulkanSwapChain.h"
-
-namespace Kanto {
+namespace Kanto 
+{
 
 	struct WindowSpecification
 	{
@@ -28,7 +24,8 @@ namespace Kanto {
 		std::filesystem::path IconPath;
 	};
 
-	class VulkanSwapChain;
+	//not needed
+	//class VulkanSwapChain;
 
 	class Window
 	{
@@ -62,8 +59,8 @@ namespace Kanto {
 
 		inline void* GetNativeWindow() const { return m_Window; }
 
-		virtual Ref<VulkanContext> GetRenderContext() { return m_RendererContext; }
-		virtual VulkanSwapChain& GetSwapChain();
+		//virtual Ref<VulkanContext> GetRenderContext() { return m_RendererContext; }
+		//virtual VulkanSwapChain& GetSwapChain();
 
 	public:
 		static Window* Create(const WindowSpecification& specification = WindowSpecification());
@@ -86,8 +83,8 @@ namespace Kanto {
 		float m_LastFrameTime = 0.0f;
 
 		//Ref<RendererContext> m_RendererContext;
-		Ref<VulkanContext> m_RendererContext;
-		VulkanSwapChain* m_SwapChain;
+		//Ref<VulkanContext> m_RendererContext;
+		//VulkanSwapChain* m_SwapChain;
 	};
 
 }

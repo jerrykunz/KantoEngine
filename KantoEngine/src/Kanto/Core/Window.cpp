@@ -8,8 +8,7 @@
 
 #include "Kanto/Renderer/RendererAPI.h"
 
-#include "Kanto/Platform/Vulkan/VulkanContext.h"
-#include "Kanto/Platform/Vulkan/VulkanSwapChain.h"
+//#include "Kanto/Platform/Vulkan/VulkanContext.h"
 
 #include <imgui.h>
 #include "stb_image.h"
@@ -120,11 +119,11 @@ namespace Kanto
 		/*m_RendererContext = RendererContext::Create();
 		m_RendererContext->Init();*/
 
-		m_RendererContext = CreateRef<VulkanContext>(m_Window, "Kanto", "lol", m_Specification.VSync); 
+		//m_RendererContext = CreateRef<VulkanContext>(m_Window, "Kanto", "lol", m_Specification.VSync); 
 
 		//Ref<VulkanContext> context = m_RendererContext.As<VulkanContext>();
 
-		m_SwapChain = m_RendererContext->SwapChain;
+		//m_SwapChain = m_RendererContext->SwapChain;
 
 		/*m_SwapChain->Init(VulkanContext::GetInstance(), context->GetDevice());
 		m_SwapChain->InitSurface(m_Window);
@@ -339,9 +338,9 @@ namespace Kanto
 		glfwSetWindowTitle(m_Window, m_Data.Title.c_str());
 	}
 
-	VulkanSwapChain& Window::GetSwapChain()
+	/*VulkanSwapChain& Window::GetSwapChain()
 	{
 		return *m_SwapChain;
-	}
+	}*/
 
 }

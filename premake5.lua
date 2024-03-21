@@ -32,6 +32,7 @@ group "Dependencies"
 	include "KantoEngine/vendor/Glad"
 	--include "KantoEngine/vendor/msdf-atlas-gen"
 	include "KantoEngine/vendor/imgui"
+	include "KantoEngine/vendor/tracy"
 	--include "KantoEngine/vendor/yaml-cpp"
 group ""
 
