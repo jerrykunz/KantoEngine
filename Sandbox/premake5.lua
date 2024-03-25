@@ -13,14 +13,17 @@ project "Sandbox"
 		"src/**.cpp"
 	}
 
+	--I give up, these need to be the same as KantoEngine project. src and vendor should be enough but no...
 	includedirs
 	{
+		--"{/src}",
 		"%{wks.location}/KantoEngine/vendor/spdlog/include",
 		"%{wks.location}/KantoEngine/src",
 		"%{wks.location}/KantoEngine/vendor",
 		"%{IncludeDir.glm}",
-		--"%{wks.location}/KantoEngine/vendor/GLFW/include",
-		--"%{IncludeDir.VulkanSDK}"
+		"%{IncludeDir.nfd}",
+		"%{wks.location}/KantoEngine/vendor/GLFW/include",
+		"%{IncludeDir.VulkanSDK}"
 		--"%{IncludeDir.entt}"
 	}
 
