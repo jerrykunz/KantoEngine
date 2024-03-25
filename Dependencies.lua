@@ -1,16 +1,18 @@
 
 -- KantoEngine Dependencies
 
---VULKAN_SDK = os.getenv("VULKAN_SDK")
+VULKAN_SDK = os.getenv("VULKAN_SDK")
 
 IncludeDir = {}
+IncludeDir["tracy"] = "%{wks.location}/KantoEngine/vendor/tracy/tracy/public"
+IncludeDir["nfd"] = "%{wks.location}/KantoEngine/vendor/NFD-Extended/NFD-Extended/src/include"
 IncludeDir["stb_image"] = "%{wks.location}/KantoEngine/vendor/stb_image"
 --IncludeDir["yaml_cpp"] = "%{wks.location}/KantoEngine/vendor/yaml-cpp/include"
 --IncludeDir["Box2D"] = "%{wks.location}/KantoEngine/vendor/Box2D/include"
 --IncludeDir["filewatch"] = "%{wks.location}/KantoEngine/vendor/filewatch"
 IncludeDir["GLFW"] = "%{wks.location}/KantoEngine/vendor/GLFW/include"
 IncludeDir["Glad"] = "%{wks.location}/KantoEngine/vendor/Glad/include"
---IncludeDir["ImGui"] = "%{wks.location}/KantoEngine/vendor/ImGui"
+IncludeDir["ImGui"] = "%{wks.location}/KantoEngine/vendor/ImGui"
 --IncludeDir["ImGuizmo"] = "%{wks.location}/KantoEngine/vendor/ImGuizmo"
 IncludeDir["glm"] = "%{wks.location}/KantoEngine/vendor/glm"
 --IncludeDir["entt"] = "%{wks.location}/KantoEngine/vendor/entt/include"
@@ -21,15 +23,15 @@ IncludeDir["glm"] = "%{wks.location}/KantoEngine/vendor/glm"
 --IncludeDir["msdfgen"] = "%{wks.location}/KantoEngine/vendor/msdf-atlas-gen/msdfgen"
 --IncludeDir["msdf_atlas_gen"] = "%{wks.location}/KantoEngine/vendor/msdf-atlas-gen/msdf-atlas-gen"
 
---LibraryDir = {}
+LibraryDir = {}
 
---LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
+LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
 --LibraryDir["mono"] = "%{wks.location}/KantoEngine/vendor/mono/lib/%{cfg.buildcfg}"
 --
---Library = {}
+Library = {}
 --Library["mono"] = "%{LibraryDir.mono}/libmono-static-sgen.lib"
 --
---Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
+Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
 --Library["VulkanUtils"] = "%{LibraryDir.VulkanSDK}/VkLayer_utils.lib"
 --
 --Library["ShaderC_Debug"] = "%{LibraryDir.VulkanSDK}/shaderc_sharedd.lib"

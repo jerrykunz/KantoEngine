@@ -47,6 +47,9 @@ project "KantoEngine"
 		--"%{IncludeDir.yaml_cpp}",
 		--"%{IncludeDir.ImGuizmo}",
 		--"%{IncludeDir.VulkanSDK}"
+		"%{IncludeDir.nfd}",
+		"%{IncludeDir.tracy}",
+		"%{IncludeDir.ImGui}",
 	}
 
 	links
