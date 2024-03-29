@@ -5,7 +5,7 @@
 
 #include "Kanto/Renderer/Renderer.h"
 
-//#include "Kanto/Platform/Vulkan/VulkanImGuiLayer.h"
+#include "Kanto/Platform/Vulkan/VulkanImGuiLayer.h"
 
 #include "Kanto/Renderer/RendererAPI.h"
 
@@ -19,6 +19,8 @@ namespace Kanto {
 
 	ImGuiLayer* ImGuiLayer::Create()
 	{
+		return hnew VulkanImGuiLayer();
+
 		/*switch (RendererAPI::Current())
 		{
 		case RendererAPIType::None:    return nullptr;

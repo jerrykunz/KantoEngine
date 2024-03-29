@@ -60,7 +60,6 @@ namespace Kanto
 		VkDescriptorPool _descriptorPool;
 		std::vector<VkDescriptorSet> _descriptorSets;
 
-		std::vector<VkCommandBuffer> _commandBuffers;
 
 		std::vector<VkSemaphore> _imageAvailableSemaphores;
 		std::vector<VkSemaphore> _renderFinishedSemaphores;
@@ -123,6 +122,7 @@ namespace Kanto
 		bool FrameBufferResized;
 
 
+		std::vector<VkCommandBuffer> CommandBuffers;
 
 		VkInstance Instance;
 		VkSurfaceKHR Surface;
@@ -172,6 +172,8 @@ namespace Kanto
 		VulkanContext(GLFWwindow* window, const std::string& applicationName, const std::string& engineName, bool vsync);
 		~VulkanContext();
 
+		static Ref<VulkanContext> Get() { return Ref<VulkanContext>(Application::Get().GetWindow().GetRenderContext()); }
+
 		void InitQuadRendering();
 		void InitLineRendering();
 
@@ -184,6 +186,9 @@ namespace Kanto
 		void RenderLine(const glm::vec3 p1, const glm::vec3 p2, const glm::vec4& color1, const glm::vec4& color2);
 		void RenderQuadLine(glm::vec3 start, glm::vec3 end, float width, glm::vec4 startColor1, glm::vec4 startColor2, glm::vec4 endColor1, glm::vec4 endColor2);
 
+		void BeginFrame();
+		void BeginScene();
+		void EndScene();
 		void DrawFrame(GLFWwindow* window);
 
 		void CleanUp();

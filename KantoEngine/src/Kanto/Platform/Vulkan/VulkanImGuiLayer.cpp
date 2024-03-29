@@ -1,5 +1,5 @@
 #include "knpch.h"
-/*#include "VulkanImGuiLayer.h"
+#include "VulkanImGuiLayer.h"
 
 #include "imgui.h"
 #include "Kanto/ImGui/ImGuizmo.h"
@@ -8,7 +8,9 @@
 #define IMGUI_IMPL_API
 #endif
 #include "backends/imgui_impl_glfw.h"
-#include "examples/imgui_impl_vulkan_with_textures.h"
+
+//#include "examples/imgui_impl_vulkan_with_textures.h"
+#include "backends/imgui_impl_vulkan.h"
 
 #include "Kanto/Core/Application.h"
 #include <GLFW/glfw3.h>
@@ -67,7 +69,7 @@ namespace Kanto {
 			robotoDefault.Size = 15.0f;
 			UI::Fonts::Add(robotoDefault, true);
 
-			static const ImWchar s_FontAwesomeRanges[] = { HZ_ICON_MIN, HZ_ICON_MAX, 0 };
+			static const ImWchar s_FontAwesomeRanges[] = { KN_ICON_MIN, KN_ICON_MAX, 0 };
 			UI::FontConfiguration fontAwesome;
 			fontAwesome.FontName = "FontAwesome";
 			fontAwesome.FilePath = "Resources/Fonts/FontAwesome/fontawesome-webfont.ttf";
@@ -298,4 +300,4 @@ namespace Kanto {
 	}
 
 }
-*/
+

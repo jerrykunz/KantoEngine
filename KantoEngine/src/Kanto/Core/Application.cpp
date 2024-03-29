@@ -169,11 +169,44 @@ namespace Kanto
 	{
 		OnInit();
 		
+		//test
+		Ref<VulkanContext> rendererContext = Application::Get().GetWindow().GetRenderContext();
+		rendererContext = VulkanContext::Get();
 		while (true)
 		{
+			//swap rendercommandqueues (per frame?)
+			//multithread shit
+			// BEGINFRAME
+				//execute m_CurrentBufferIndex
+				//acquire next image (fpAcquireNextImageKHR)
+				//reset command pool (vkResetCommandPool, resets all command buffers) (I'm using vkResetCommandBuffer separately)
+			//RuntimeLayer::OnUpdate(Timestep ts)
+				//auto [width, height] = app.GetWindow().GetSize();
+				//m_SceneRenderer->SetViewportSize(width, height);
+				//m_RuntimeScene->SetViewportSize(width, height);
+				//m_EditorCamera.SetViewportSize(width, height);
+				//m_Renderer2DProj = glm::ortho(0.0f, (float)width, 0.0f, (float)height);
+
+				//if (m_Width != width || m_Height != height)
+				//{
+				//	m_Width = width;
+				//	m_Height = height;
+				//	m_Renderer2D->OnRecreateSwapchain(); (just recreates swapchain with all that bs from onupdate to here)
+
+				//	// Retrieve new main command buffer
+				//	m_CommandBuffer = RenderCommandBuffer::CreateFromSwapChain("RuntimeLayer");
+				//}
+
+				//OnRenderRuntime
+					//Renderer2D::BeginScene (reset all quadcounts etc)
+					//Renderer2D::SetTargetFramebuffer(Ref<Framebuffer> framebuffer) (set target framebuffer to all graphicspipelines)
+					//Renderer2D::EndScene() (actually draw quads, texts, lines, etc)
+
+				//same for screenspacerenderer2d (???)
+			//RuntimeLayer::OnRender2D() <- what is this now, this does basically nothing? begin and end again? I guess it's debug info
+			//// Render final image to swapchain
 
 		}
-
 		/*while (m_Running)
 		{
 			// Wait for render thread to finish frame

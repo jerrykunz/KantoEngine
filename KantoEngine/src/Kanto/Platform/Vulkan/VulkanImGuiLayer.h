@@ -1,4 +1,4 @@
-/*#pragma once
+#pragma once
 
 #include "Kanto/ImGui/ImGuiLayer.h"
 #include "Kanto/Renderer/RenderCommandBuffer.h"
@@ -25,4 +25,4 @@ namespace Kanto
 	};
 
 }
-*/
+
