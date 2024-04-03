@@ -123,7 +123,7 @@ namespace Kanto::Utils
 				using namespace std::chrono_literals;
 				std::this_thread::sleep_for(3s);
 				//Utils::RetrieveDiagnosticCheckpoints();
-				Utils::DumpGPUInfo();
+				//Utils::DumpGPUInfo();
 			}
 			KN_CORE_ASSERT(result == VK_SUCCESS);
 		}
@@ -139,7 +139,7 @@ namespace Kanto::Utils
 				using namespace std::chrono_literals;
 				std::this_thread::sleep_for(3s);
 				//Utils::RetrieveDiagnosticCheckpoints();
-				Utils::DumpGPUInfo();
+				//Utils::DumpGPUInfo();
 			}
 			KN_CORE_ASSERT(result == VK_SUCCESS);
 		}
@@ -149,10 +149,10 @@ namespace Kanto::Utils
 #define VK_CHECK_RESULT(f)\
 {\
 	VkResult res = (f);\
-	::Hazel::Utils::VulkanCheckResult(res, __FILE__, __LINE__);\
+	::Kanto::Utils::VulkanCheckResult(res, __FILE__, __LINE__);\
 }
 
-namespace Hazel::VKUtils
+namespace Kanto::VKUtils
 {
 	inline static void SetDebugUtilsObjectName(const VkDevice device, const VkObjectType objectType, const std::string& name, const void* handle)
 	{

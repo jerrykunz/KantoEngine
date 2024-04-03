@@ -28,7 +28,7 @@ namespace Kanto
 
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 {
-	return Hazel::Main(__argc, __argv);
+	return Kanto::Main(__argc, __argv);
 }
 
 #else

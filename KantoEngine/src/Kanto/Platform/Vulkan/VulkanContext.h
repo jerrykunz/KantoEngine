@@ -13,7 +13,7 @@
 #include <array>
 #include <vector>
 
-
+#include "Kanto/Core/Application.h"
 #include "VulkanPhysicalDevice.h"
 #include "VulkanPushConstants.h"
 #include "VulkanPipeLine.h"
@@ -117,6 +117,11 @@ namespace Kanto
 
 		//glm::mat4 CreateViewMatrix(float pitch, float yaw, float roll, glm::vec3 position);
 
+		VkRenderPass _imguiRenderPass;
+		VkDescriptorPool _imguiDescriptorPool;
+		VkCommandBuffer _imguiCommandBuffer;
+		std::vector<VkCommandBuffer> _imguiCommandBuffers;
+
 	public:
 		uint32_t CurrentFrame = 0;
 		bool FrameBufferResized;
@@ -195,6 +200,13 @@ namespace Kanto
 
 		//SURFACE
 		void CreateSurface(GLFWwindow* window);
+		
+		void CreateImGui();
+		void CreateImGuiRenderPass(VulkanPhysicalDevice* physicalDevice,
+								   VulkanDevice* device,
+								   VkFormat& swapChainImageFormat);
+		void CreateCommandBuffer(VkCommandBuffer buffer);
+		void RecordImGuiCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 		ViewProjectionUBO* GetViewProjectionUBO();
 		InstanceDataUBO* GetInstanceDataUBO();

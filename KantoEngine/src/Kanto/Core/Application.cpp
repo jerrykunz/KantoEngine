@@ -90,11 +90,11 @@ namespace Kanto
 			m_Window->CenterWindow();
 		m_Window->SetResizable(specification.Resizable);
 
-		if (m_Specification.EnableImGui)
+		/*if (m_Specification.EnableImGui)
 		{
 			m_ImGuiLayer = ImGuiLayer::Create();
 			PushOverlay(m_ImGuiLayer);
-		}
+		}*/
 
 		//PhysicsSystem::Init();
 		//ScriptEngine::Init(specification.ScriptConfig);
@@ -170,8 +170,8 @@ namespace Kanto
 		OnInit();
 		
 		//test
-		Ref<VulkanContext> rendererContext = Application::Get().GetWindow().GetRenderContext();
-		rendererContext = VulkanContext::Get();
+		/*Ref<VulkanContext> rendererContext = Application::Get().GetWindow().GetRenderContext();
+		rendererContext = VulkanContext::Get();*/
 		while (true)
 		{
 			//swap rendercommandqueues (per frame?)

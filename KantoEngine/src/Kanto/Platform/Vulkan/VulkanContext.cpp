@@ -1,7 +1,18 @@
 #include "knpch.h"
 #include "VulkanContext.h"
 #include "Kanto/Core/Application.h"
+#include "imgui.h"
+#include "VulkanUtils.h"
 
+#include "imgui.h"
+#include "Kanto/ImGui/ImGuizmo.h"
+#include "Kanto/ImGui/ImGuiFonts.h"
+#ifndef IMGUI_IMPL_API
+#define IMGUI_IMPL_API
+#endif
+#include <GLFW/glfw3.h>
+#include "backends/imgui_impl_glfw.h"
+#include "examples/imgui_impl_vulkan_with_textures.h"
 
 
 
@@ -319,6 +330,13 @@ namespace Kanto
 
 	void VulkanContext::CleanUp()
 	{
+		//destroy ImGui
+		VK_CHECK_RESULT(vkDeviceWaitIdle(Device->Device));
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+
+
 		delete _frameBuffer;
 		_frameBuffer = nullptr;
 
@@ -372,6 +390,92 @@ namespace Kanto
 
 		vkDestroySurfaceKHR(Instance, Surface, nullptr);
 		vkDestroyInstance(Instance, nullptr);
+	}
+
+	void VulkanContext::RecordImGuiCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+	{
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
+
+		ImGui::Render();
+
+		VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+
+		VkClearValue clearValues[2];
+		clearValues[0].color = { {0.1f, 0.1f,0.1f, 1.0f} };
+		clearValues[1].depthStencil = { 1.0f, 0 };
+
+		VkCommandBufferBeginInfo drawCmdBufInfo = {};
+		drawCmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		drawCmdBufInfo.pNext = nullptr;
+
+		//VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
+		VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &drawCmdBufInfo));
+
+		VkRenderPassBeginInfo renderPassBeginInfo = {};
+		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassBeginInfo.pNext = nullptr;
+		renderPassBeginInfo.renderPass = _imguiRenderPass;
+		renderPassBeginInfo.renderArea.offset = { 0, 0 };
+		renderPassBeginInfo.renderArea.extent = SwapChain->SwapChainExtent;
+		renderPassBeginInfo.clearValueCount = 2; // Color + depth
+		renderPassBeginInfo.pClearValues = clearValues;
+		renderPassBeginInfo.framebuffer = _frameBuffer->SwapChainFramebuffers[imageIndex]; //swapChain.GetCurrentFramebuffer();
+
+		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+		VkCommandBufferInheritanceInfo inheritanceInfo = {};
+		inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+		inheritanceInfo.renderPass = _imguiRenderPass;
+		inheritanceInfo.framebuffer = _frameBuffer->SwapChainFramebuffers[imageIndex];
+
+		VkCommandBufferBeginInfo cmdBufInfo = {};
+		cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+		cmdBufInfo.pInheritanceInfo = &inheritanceInfo;
+
+		VK_CHECK_RESULT(vkBeginCommandBuffer(_imguiCommandBuffers[imageIndex], &cmdBufInfo));
+
+		VkViewport viewport = {};
+		viewport.x = 0.0f;
+		viewport.y = (float)SwapChain->SwapChainExtent.height;
+		viewport.height = -(float)SwapChain->SwapChainExtent.height;
+		viewport.width = (float)SwapChain->SwapChainExtent.width;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(_imguiCommandBuffers[imageIndex], 0, 1, &viewport);
+
+		VkRect2D scissor = {};
+		scissor.extent.width = (float)SwapChain->SwapChainExtent.width;
+		scissor.extent.height = (float)SwapChain->SwapChainExtent.height;
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+		vkCmdSetScissor(_imguiCommandBuffers[imageIndex], 0, 1, &scissor);
+
+		ImDrawData* main_draw_data = ImGui::GetDrawData();
+		ImGui_ImplVulkan_RenderDrawData(main_draw_data, _imguiCommandBuffers[imageIndex]);
+
+		VK_CHECK_RESULT(vkEndCommandBuffer(_imguiCommandBuffers[imageIndex]));
+
+		std::vector<VkCommandBuffer> commandBuffers;
+		commandBuffers.push_back(_imguiCommandBuffers[imageIndex]);
+
+		vkCmdExecuteCommands(commandBuffer, uint32_t(commandBuffers.size()), commandBuffers.data());
+
+		vkCmdEndRenderPass(commandBuffer);
+
+		VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		// Update and Render additional Platform Windows
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+		}
 	}
 
 	void VulkanContext::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
@@ -489,6 +593,165 @@ namespace Kanto
 		{
 			throw std::runtime_error("failed to record command buffer!");
 		}
+	}
+
+	void VulkanContext::CreateImGuiRenderPass(VulkanPhysicalDevice* physicalDevice,
+											  VulkanDevice* device,
+											  VkFormat& swapChainImageFormat)
+	{
+		VkAttachmentDescription colorAttachment{};
+		colorAttachment.format = swapChainImageFormat;
+		colorAttachment.samples = physicalDevice->MsaaSamples;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentDescription depthAttachment{};
+		depthAttachment.format = FindDepthFormat(physicalDevice->Device);
+		depthAttachment.samples = physicalDevice->MsaaSamples;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentDescription colorAttachmentResolve{};
+		colorAttachmentResolve.format = swapChainImageFormat;
+		colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		VkAttachmentReference colorAttachmentRef{};
+		colorAttachmentRef.attachment = 0;
+		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depthAttachmentRef{};
+		depthAttachmentRef.attachment = 1;
+		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference colorAttachmentResolveRef{};
+		colorAttachmentResolveRef.attachment = 2;
+		colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpass{};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &colorAttachmentRef;
+		subpass.pDepthStencilAttachment = &depthAttachmentRef;
+		subpass.pResolveAttachments = &colorAttachmentResolveRef;
+
+		VkSubpassDependency dependency{};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+		std::array<VkAttachmentDescription, 3> attachments = { colorAttachment, depthAttachment, colorAttachmentResolve };
+		VkRenderPassCreateInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		renderPassInfo.pAttachments = attachments.data();
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subpass;
+		renderPassInfo.dependencyCount = 1;
+		renderPassInfo.pDependencies = &dependency;
+
+		if (vkCreateRenderPass(device->Device, &renderPassInfo, nullptr, &_imguiRenderPass) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create render pass!");
+		}
+	}
+
+	void VulkanContext::CreateImGui()
+	{
+		Application& app = Application::Get();
+		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
+
+		auto vulkanContext = VulkanContext::Get();
+		auto device = Device->Device;
+
+		//VkDescriptorPool descriptorPool;
+
+		// Create Descriptor Pool
+		VkDescriptorPoolSize pool_sizes[] =
+		{
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 100 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 100 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 }
+		};
+		VkDescriptorPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
+		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+		pool_info.pPoolSizes = pool_sizes;
+		VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &_imguiDescriptorPool));
+
+		// Setup Platform/Renderer bindings
+		ImGui_ImplGlfw_InitForVulkan(window, true);
+		ImGui_ImplVulkan_InitInfo init_info = {};
+		init_info.Instance = Instance;
+		init_info.PhysicalDevice = PhysicalDevice->Device; //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetVulkanPhysicalDevice();
+		init_info.Device = device;
+		init_info.QueueFamily = (uint32_t)PhysicalDevice->QueueIndices.graphicsFamily.value_or(-1); //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics;
+		init_info.Queue = Device->GraphicsQueue;
+		init_info.PipelineCache = nullptr;
+		init_info.DescriptorPool = _imguiDescriptorPool;
+		init_info.Allocator = nullptr;
+		init_info.MinImageCount = 2;
+		VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+		init_info.ImageCount = swapChain.SwapChainImages.size(); //.GetImageCount();
+		init_info.CheckVkResultFn = Utils::VulkanCheckResult;
+
+		CreateImGuiRenderPass(PhysicalDevice, Device, SwapChain->SwapChainImageFormat);
+		ImGui_ImplVulkan_Init(&init_info, _imguiRenderPass);
+
+		// Upload Fonts
+		{
+			// Use any command queue
+
+			//VkCommandBuffer commandBuffer = vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
+			VkCommandBuffer tempBuff;
+			CreateCommandBuffer(tempBuff);
+			ImGui_ImplVulkan_CreateFontsTexture(tempBuff);
+			//vkResetCommandBuffer(_imguiCommandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
+			VK_CHECK_RESULT(vkEndCommandBuffer(tempBuff));
+			vkFreeCommandBuffers(device, CommandPool, 1, &tempBuff);
+
+			//vulkanContext->GetCurrentDevice()->FlushCommandBuffer(_imguiCommandBuffer);
+
+
+			VK_CHECK_RESULT(vkDeviceWaitIdle(device));
+			ImGui_ImplVulkan_DestroyFontUploadObjects();
+		}
+
+		_imguiCommandBuffers.resize(_maxFramesInFlight);
+		for (uint32_t i = 0; i < _maxFramesInFlight; i++)
+			CreateCommandBuffer(_imguiCommandBuffers[i]);
+
+
+		/*uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+		s_ImGuiCommandBuffers.resize(framesInFlight);
+		for (uint32_t i = 0; i < framesInFlight; i++)
+			s_ImGuiCommandBuffers[i] = VulkanContext::GetCurrentDevice()->CreateSecondaryCommandBuffer("ImGuiSecondaryCoommandBuffer");*/
 	}
 
 	void VulkanContext::InitializeInstance(const std::string& applicationName, const std::string& engineName)
@@ -1167,6 +1430,20 @@ namespace Kanto
 		allocInfo.commandBufferCount = (uint32_t)CommandBuffers.size();
 
 		if (vkAllocateCommandBuffers(Device->Device, &allocInfo, CommandBuffers.data()) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to allocate command buffers!");
+		}
+	}
+
+	void VulkanContext::CreateCommandBuffer(VkCommandBuffer buffer)
+	{
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = CommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		if (vkAllocateCommandBuffers(Device->Device, &allocInfo, &buffer) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to allocate command buffers!");
 		}

@@ -39,7 +39,8 @@ namespace Kanto::Utils
 
 	void RetrieveDiagnosticCheckpoints()
 	{
-		bool supported = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
+		//Ref<VulkanContext> rendererContext = VulkanContext::Get()->PhysicalDevice->DeviceExtensions;
+		/*bool supported = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
 		if (!supported)
 			return;
 
@@ -51,7 +52,7 @@ namespace Kanto::Utils
 				data[i].sType = VK_STRUCTURE_TYPE_CHECKPOINT_DATA_NV;
 
 			uint32_t retrievedCount = checkpointCount;
-			vkGetQueueCheckpointDataNV(::Hazel::VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), &retrievedCount, data);
+			vkGetQueueCheckpointDataNV(::Kanto::VulkanContext::GetCurrentDevice()->GetGraphicsQueue(), &retrievedCount, data);
 			KN_CORE_ERROR("RetrieveDiagnosticCheckpoints (Graphics Queue):");
 			for (uint32_t i = 0; i < retrievedCount; i++)
 			{
@@ -74,7 +75,7 @@ namespace Kanto::Utils
 				KN_CORE_ERROR("Checkpoint: {0} (stage: {1})", checkpoint->Data, StageToString(data[i].stage));
 			}
 		}
-		//__debugbreak();
+		//__debugbreak();*/
 	}
 
 }

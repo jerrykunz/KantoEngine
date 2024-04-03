@@ -11,7 +11,7 @@ namespace Kanto::Utils
 
 	void SetVulkanCheckpoint(VkCommandBuffer commandBuffer, const std::string& data)
 	{
-		const bool supported = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
+		/*const bool supported = VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->IsExtensionSupported(VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME);
 		if (!supported)
 			return;
 
@@ -19,7 +19,7 @@ namespace Kanto::Utils
 		VulkanCheckpointData& checkpoint = s_CheckpointStorage[s_CheckpointStorageIndex];
 		memset(checkpoint.Data, 0, sizeof(checkpoint.Data));
 		strcpy(checkpoint.Data, data.data());
-		vkCmdSetCheckpointNV(commandBuffer, &checkpoint);
+		vkCmdSetCheckpointNV(commandBuffer, &checkpoint);*/
 	}
 
 }

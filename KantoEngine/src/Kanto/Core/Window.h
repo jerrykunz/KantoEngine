@@ -2,9 +2,9 @@
 
 #include "Kanto/Core/Base.h"
 #include "Kanto/Core/Events/Event.h"
-#include "Kanto/Renderer/GraphicsContext.h"
+//#include "Kanto/Renderer/GraphicsContext.h"
 
-#include "Kanto/Platform/Vulkan/VulkanContext.h"
+//#include "Kanto/Platform/Vulkan/VulkanContext.h"
 
 #include <sstream>
 #include <filesystem>
@@ -14,10 +14,12 @@
 
 namespace Kanto 
 {
+	class VulkanContext;
+	class VulkanSwapChain;
 
 	struct WindowSpecification
 	{
-		std::string Title = "Hazel";
+		std::string Title = "Kanto";
 		uint32_t Width = 1600;
 		uint32_t Height = 900;
 		bool Decorated = true;

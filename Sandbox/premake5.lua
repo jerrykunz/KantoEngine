@@ -22,13 +22,15 @@ project "Sandbox"
 		"%{wks.location}/KantoEngine/vendor",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.nfd}",
+		--"%{IncludeDir.ImGui}",
 		"%{wks.location}/KantoEngine/vendor/GLFW/include",
-		"%{IncludeDir.VulkanSDK}"
+		"%{IncludeDir.VulkanSDK}",
 		--"%{IncludeDir.entt}"
 	}
 
 	links
 	{
+		"ImGui",
 		"KantoEngine"
 	}
 

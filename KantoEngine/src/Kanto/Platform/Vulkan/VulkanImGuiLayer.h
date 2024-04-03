@@ -1,5 +1,5 @@
 #pragma once
-
+/*
 #include "Kanto/ImGui/ImGuiLayer.h"
 #include "Kanto/Renderer/RenderCommandBuffer.h"
 
@@ -24,5 +24,5 @@ namespace Kanto
 		float m_Time = 0.0f;
 	};
 
-}
+}*/
 

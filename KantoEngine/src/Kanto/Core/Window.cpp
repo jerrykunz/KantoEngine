@@ -8,7 +8,7 @@
 
 #include "Kanto/Renderer/RendererAPI.h"
 
-//#include "Kanto/Platform/Vulkan/VulkanContext.h"
+#include "Kanto/Platform/Vulkan/VulkanContext.h"
 
 #include <imgui.h>
 #include "stb_image.h"
