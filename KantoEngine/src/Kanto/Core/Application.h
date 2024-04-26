@@ -21,14 +21,14 @@ namespace Kanto
 	struct ApplicationSpecification
 	{
 		std::string Name = "Kanto";
-		uint32_t WindowWidth = 1600, WindowHeight = 900;
-		bool WindowDecorated = false;
+		uint32_t WindowWidth = 800, WindowHeight = 600;
+		bool WindowDecorated = true;
 		bool Fullscreen = false;
 		bool VSync = true;
 		std::string WorkingDirectory;
-		bool StartMaximized = true;
+		bool StartMaximized = false; //true;
 		bool Resizable = true;
-		bool EnableImGui = true;
+		bool EnableImGui = false;
 		//ScriptEngineConfig ScriptConfig;
 		//RendererConfig RenderConfig;
 		//ThreadingPolicy CoreThreadingPolicy = ThreadingPolicy::MultiThreaded;

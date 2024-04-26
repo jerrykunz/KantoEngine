@@ -129,7 +129,10 @@ namespace Kanto
 		m_SwapChain->InitSurface(m_Window);
 		m_SwapChain->Create(&m_Data.Width, &m_Data.Height, m_Specification.VSync);*/
 
-		glfwMaximizeWindow(m_Window);
+		//why max the window here?
+		//glfwMaximizeWindow(m_Window);
+
+
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 
 		bool isRawMouseMotionSupported = glfwRawMouseMotionSupported();

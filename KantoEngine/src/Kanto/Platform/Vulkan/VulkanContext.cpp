@@ -522,6 +522,7 @@ namespace Kanto
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 		//2D quad rendering
+		if (QuadVertexCount > 0)
 		{
 			vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->Pipeline  /*_GraphicsPipeline2DQuad*/);
 

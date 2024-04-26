@@ -12,7 +12,6 @@
 
 namespace Kanto 
 {
-
 	void Input::Update()
 	{
 		// Cleanup disconnected controller
@@ -71,7 +70,7 @@ namespace Kanto
 
 	bool Input::IsKeyDown(KeyCode keycode)
 	{
-		/*bool enableImGui = Application::Get().GetSpecification().EnableImGui;
+		bool enableImGui = Application::Get().GetSpecification().EnableImGui;
 		if (!enableImGui)
 		{
 			auto& window = static_cast<Window&>(Application::Get().GetWindow());
@@ -99,7 +98,7 @@ namespace Kanto
 			}
 		}
 
-		return pressed;*/
+		return pressed;
 		return false;
 	}
 
@@ -121,7 +120,7 @@ namespace Kanto
 	bool Input::IsMouseButtonDown(MouseButton button)
 	{
 		return false;
-		/*
+		
 		bool enableImGui = Application::Get().GetSpecification().EnableImGui;
 		if (!enableImGui)
 		{
@@ -148,7 +147,7 @@ namespace Kanto
 				break;
 			}
 		}
-		return pressed;*/
+		return pressed;
 	}
 
 	bool Input::IsMouseButtonReleased(MouseButton button)
@@ -181,9 +180,9 @@ namespace Kanto
 	//		of the screen when it reaches the edge
 	void Input::SetCursorMode(CursorMode mode)
 	{
-		/*auto& window = static_cast<Window&>(Application::Get().GetWindow());
+		auto& window = static_cast<Window&>(Application::Get().GetWindow());
 		glfwSetInputMode(static_cast<GLFWwindow*>(window.GetNativeWindow()), GLFW_CURSOR, GLFW_CURSOR_NORMAL + (int)mode);
-
+		/*
 		if (Application::Get().GetSpecification().EnableImGui)
 			UI::SetInputEnabled(mode == CursorMode::Normal);*/
 	}

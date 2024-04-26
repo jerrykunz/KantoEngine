@@ -34,6 +34,10 @@
 
 #include "Memory.h"
 
+#include "Kanto/Platform/Vulkan/VulkanContext.h"
+#include "Base.h"
+#include "Camera.h"
+
 extern bool g_ApplicationRunning;
 extern ImGuiContext* GImGui;
 namespace Kanto
@@ -58,7 +62,7 @@ namespace Kanto
 		if (!specification.WorkingDirectory.empty())
 			std::filesystem::current_path(specification.WorkingDirectory);
 
-		m_Profiler = hnew PerformanceProfiler();
+		m_Profiler = hnew PerformanceProfiler(); 
 
 		//Renderer::SetConfig(specification.RenderConfig);
 
@@ -168,7 +172,98 @@ namespace Kanto
 	void Application::Run()
 	{
 		OnInit();
-		
+
+		//GET CONTEXT AND UPDATE DS
+		Ref<VulkanContext> rendererContext = m_Window->GetRenderContext(); //Application::Get().GetWindow().GetRenderContext();
+		rendererContext->CreateDescriptorSets();
+
+		//CREATE CAMERA
+		std::pair winSize = m_Window->GetSize();
+		Camera camera;
+		camera.type = Camera::CameraType::firstperson;
+		camera.flipY = -1.0f;
+		camera.setPerspective(60.0f, (float)winSize.first / (float)winSize.second, 0.1f, 512.0f);
+		camera.setTranslation(glm::vec3(1.0f, 0.0f, -2.0f));
+		camera.setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+		camera.movementSpeed = 3.0f;
+
+
+		//LOOP INIT
+		const double targetFrameRate = 60.0;
+		const double frameTime = 1.0 / targetFrameRate;
+		double lastFrameTime = glfwGetTime();
+
+		Input::SetCursorMode(CursorMode::Locked);
+
+		float prevMouseInit = 1.0f;
+		float prevMouseX = 0;
+		float prevMouseY = 0;
+
+		//LOOP START
+		while (m_Running)
+		{
+			ProcessEvents();
+
+			double currentFrameTime = glfwGetTime();
+			double deltaTime = currentFrameTime - lastFrameTime;
+
+			//auto [mouseX, mouseY] = Input::GetMouseDelta();
+
+			if (deltaTime >= frameTime)
+			{
+				lastFrameTime = currentFrameTime;
+
+				camera.keys.left = Input::IsKeyDown(KeyCode::A);
+				camera.keys.right = Input::IsKeyDown(KeyCode::D);
+				camera.keys.forward = Input::IsKeyDown(KeyCode::W);
+				camera.keys.backward = Input::IsKeyDown(KeyCode::S);
+				camera.keys.up = Input::IsKeyDown(KeyCode::Space);
+				camera.keys.down = Input::IsKeyDown(KeyCode::LeftControl);
+
+				auto [mouseX, mouseY] = Input::GetMousePosition();
+
+				//for the first frame mouseXY = prevMouseXY
+				prevMouseX += mouseX * prevMouseInit;
+				prevMouseY += mouseY * prevMouseInit;
+				prevMouseInit = 0.0f;
+
+				camera.rotate(glm::vec3((-mouseY + prevMouseY) * 0.01f, 
+										(mouseX - prevMouseX) * 0.01f, 0.0f));
+				prevMouseX = mouseX;
+				prevMouseY = mouseY;
+
+				camera.update(deltaTime);
+
+				auto viewProjUBO = rendererContext->GetViewProjectionUBO();
+				viewProjUBO->proj = camera.matrices.perspective;
+				viewProjUBO->view = camera.matrices.view;
+
+				rendererContext->RenderLine(glm::vec3(0.0f, 0.0f, 0.0f),
+					glm::vec3(20.0f, 0.0f, 0.0f),
+					glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+					glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+				rendererContext->RenderLine(glm::vec3(20.0f, 0.0f, 0.0f),
+					glm::vec3(20.0f, 20.0f, 0.0f),
+					glm::vec4(1.0f, 0.0f, 0.0f, 0.01f),
+					glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+				rendererContext->RenderQuadLine(glm::vec3(0.0f, 0.0f, 0.11f),
+					glm::vec3(2.0f, 2.0f, 0.11f),
+					0.01f,
+					glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+					glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+					glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+					glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+				rendererContext->DrawFrame((GLFWwindow*)Application::Get().GetWindow().GetNativeWindow());
+				Input::ClearReleasedKeys();
+				int a = 3;
+			}
+		}
+
+
+
 		//test
 		/*Ref<VulkanContext> rendererContext = Application::Get().GetWindow().GetRenderContext();
 		rendererContext = VulkanContext::Get();*/
@@ -207,6 +302,8 @@ namespace Kanto
 			//// Render final image to swapchain
 
 		}
+
+
 		/*while (m_Running)
 		{
 			// Wait for render thread to finish frame
