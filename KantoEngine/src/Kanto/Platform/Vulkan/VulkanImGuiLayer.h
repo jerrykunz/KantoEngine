@@ -1,7 +1,8 @@
 #pragma once
-/*
+
 #include "Kanto/ImGui/ImGuiLayer.h"
-#include "Kanto/Renderer/RenderCommandBuffer.h"
+//#include "Kanto/Renderer/RenderCommandBuffer.h"
+#include <vulkan/vulkan_core.h>
 
 namespace Kanto
 {
@@ -20,9 +21,10 @@ namespace Kanto
 		virtual void OnDetach() override;
 		virtual void OnImGuiRender() override;
 	private:
-		Ref<RenderCommandBuffer> m_RenderCommandBuffer;
+		//Ref<RenderCommandBuffer> m_RenderCommandBuffer;
+		Ref<VkCommandBuffer> m_RenderCommandBuffer;
 		float m_Time = 0.0f;
 	};
 
-}*/
+}
 

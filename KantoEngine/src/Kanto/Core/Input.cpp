@@ -12,6 +12,8 @@
 
 namespace Kanto 
 {
+	inline extern float _prevMouseInit = 1.0f;
+
 	void Input::Update()
 	{
 		// Cleanup disconnected controller
@@ -173,7 +175,30 @@ namespace Kanto
 
 		double x, y;
 		glfwGetCursorPos(static_cast<GLFWwindow*>(window.GetNativeWindow()), &x, &y);
+		_prevMouseX = x;
+		_prevMouseY = y;
+		_prevMouseInit = 0.0f;
 		return { (float)x, (float)y };
+	}
+
+	std::pair<float, float> Input::GetMouseDelta()
+	{
+		auto& window = static_cast<Window&>(Application::Get().GetWindow());
+
+		double x, y;
+		glfwGetCursorPos(static_cast<GLFWwindow*>(window.GetNativeWindow()), &x, &y);		
+		float xx = (float)x;
+		float yy = (float)y;
+
+		_prevMouseX += (float)x * _prevMouseInit;
+		_prevMouseY += (float)y * _prevMouseInit;
+		_prevMouseInit = 0.0f;
+
+		std::pair<float, float> delta =  { xx - _prevMouseX,
+										   yy - _prevMouseY };
+		_prevMouseX = x;
+		_prevMouseY = y;
+		return delta;
 	}
 
 	// TODO: A better way to do this is to handle it internally, and simply move the cursor the opposite side

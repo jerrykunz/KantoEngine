@@ -22,7 +22,7 @@ project "Sandbox"
 		"%{wks.location}/KantoEngine/vendor",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.nfd}",
-		--"%{IncludeDir.ImGui}",
+		"%{IncludeDir.ImGui}",
 		"%{wks.location}/KantoEngine/vendor/GLFW/include",
 		"%{IncludeDir.VulkanSDK}",
 		--"%{IncludeDir.entt}"

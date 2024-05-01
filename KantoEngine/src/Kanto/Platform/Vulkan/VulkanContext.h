@@ -38,20 +38,18 @@ namespace Kanto
 	private:
 		bool _enableValidationLayers;
 		const std::vector<const char*> _validationLayers = { "VK_LAYER_KHRONOS_validation" };
-		int _maxFramesInFlight;
-
+		
 		const uint32_t _maxTextures = 32;
 		uint32_t _textureIndex = 0;
 		std::vector<VulkanImage*> _textureSlots;
 
 		VkDebugUtilsMessengerEXT _debugMessenger;
 
+
 		//Wrappers
 		
-		VulkanFrameBuffer* _frameBuffer;
 
 		//Vulkan structs
-		VkRenderPass _renderPass;
 
 		//VkPipelineLayout _pipelineLayout2DQuad;
 		//VkPipeline _GraphicsPipeline2DQuad;
@@ -113,7 +111,7 @@ namespace Kanto
 
 		void RecreateSwapChain(GLFWwindow* window);
 
-		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer);
 
 		//glm::mat4 CreateViewMatrix(float pitch, float yaw, float roll, glm::vec3 position);
 
@@ -124,13 +122,16 @@ namespace Kanto
 
 	public:
 		uint32_t CurrentFrame = 0;
+		uint32_t ImageIndex = 0;
 		bool FrameBufferResized;
+		int MaxFramesInFlight;
 
 
 		std::vector<VkCommandBuffer> CommandBuffers;
 
 		VkInstance Instance;
 		VkSurfaceKHR Surface;
+		VkRenderPass RenderPass;
 
 		VkCommandPool CommandPool;
 
@@ -141,6 +142,9 @@ namespace Kanto
 
 		VulkanUniformBuffer* ViewProjectionUniformBuffer;
 		VulkanUniformBuffer* InstanceDataUniformBuffer;
+
+		VulkanFrameBuffer* FrameBuffer;
+
 
 		std::vector<VulkanUniformBuffer*> UniformBuffers;
 		std::vector<VulkanImage*> Images;
@@ -191,9 +195,11 @@ namespace Kanto
 		void RenderLine(const glm::vec3 p1, const glm::vec3 p2, const glm::vec4& color1, const glm::vec4& color2);
 		void RenderQuadLine(glm::vec3 start, glm::vec3 end, float width, glm::vec4 startColor1, glm::vec4 startColor2, glm::vec4 endColor1, glm::vec4 endColor2);
 
-		void BeginFrame();
+		void BeginFrame();		
 		void BeginScene();
 		void EndScene();
+		void EndFrame();
+		void Present(GLFWwindow* window);
 		void DrawFrame(GLFWwindow* window);
 
 		void CleanUp();
@@ -206,7 +212,10 @@ namespace Kanto
 								   VulkanDevice* device,
 								   VkFormat& swapChainImageFormat);
 		void CreateCommandBuffer(VkCommandBuffer buffer);
-		void RecordImGuiCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void FlushCommandBuffer(VkCommandBuffer commandBuffer/*, VkQueue queue*/);
+		void RecordImGuiCommandBuffer(/*VkCommandBuffer commandBuffer, uint32_t imageIndex*/);
+		VkCommandBuffer CreateSecondaryCommandBuffer(const char* debugName);
+
 
 		ViewProjectionUBO* GetViewProjectionUBO();
 		InstanceDataUBO* GetInstanceDataUBO();

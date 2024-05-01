@@ -94,11 +94,11 @@ namespace Kanto
 			m_Window->CenterWindow();
 		m_Window->SetResizable(specification.Resizable);
 
-		/*if (m_Specification.EnableImGui)
+		if (m_Specification.EnableImGui)
 		{
 			m_ImGuiLayer = ImGuiLayer::Create();
 			PushOverlay(m_ImGuiLayer);
-		}*/
+		}
 
 		//PhysicsSystem::Init();
 		//ScriptEngine::Init(specification.ScriptConfig);
@@ -207,8 +207,6 @@ namespace Kanto
 			double currentFrameTime = glfwGetTime();
 			double deltaTime = currentFrameTime - lastFrameTime;
 
-			//auto [mouseX, mouseY] = Input::GetMouseDelta();
-
 			if (deltaTime >= frameTime)
 			{
 				lastFrameTime = currentFrameTime;
@@ -220,23 +218,19 @@ namespace Kanto
 				camera.keys.up = Input::IsKeyDown(KeyCode::Space);
 				camera.keys.down = Input::IsKeyDown(KeyCode::LeftControl);
 
-				auto [mouseX, mouseY] = Input::GetMousePosition();
-
-				//for the first frame mouseXY = prevMouseXY
-				prevMouseX += mouseX * prevMouseInit;
-				prevMouseY += mouseY * prevMouseInit;
-				prevMouseInit = 0.0f;
-
-				camera.rotate(glm::vec3((-mouseY + prevMouseY) * 0.01f, 
-										(mouseX - prevMouseX) * 0.01f, 0.0f));
-				prevMouseX = mouseX;
-				prevMouseY = mouseY;
+				auto [mouseX, mouseY] = Input::GetMouseDelta();
+				camera.rotate(glm::vec3(-mouseY * 0.01f,
+										mouseX * 0.01f, 
+										0.0f));			
 
 				camera.update(deltaTime);
 
 				auto viewProjUBO = rendererContext->GetViewProjectionUBO();
 				viewProjUBO->proj = camera.matrices.perspective;
 				viewProjUBO->view = camera.matrices.view;
+
+				rendererContext->BeginFrame();
+				rendererContext->BeginScene();
 
 				rendererContext->RenderLine(glm::vec3(0.0f, 0.0f, 0.0f),
 					glm::vec3(20.0f, 0.0f, 0.0f),
@@ -256,7 +250,23 @@ namespace Kanto
 					glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
 					glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
-				rendererContext->DrawFrame((GLFWwindow*)Application::Get().GetWindow().GetNativeWindow());
+				rendererContext->EndScene();
+
+				Application* app = this;
+				if (m_Specification.EnableImGui)
+				{
+					RenderImGui();
+					m_ImGuiLayer->End();
+				}
+
+				rendererContext->EndFrame();
+				rendererContext->Present((GLFWwindow*)m_Window->GetNativeWindow());
+
+				//old style
+				//rendererContext->DrawFrame((GLFWwindow*)Application::Get().GetWindow().GetNativeWindow());
+
+
+
 				Input::ClearReleasedKeys();
 				int a = 3;
 			}

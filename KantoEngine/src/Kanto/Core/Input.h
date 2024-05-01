@@ -59,6 +59,7 @@ namespace Kanto
 		static float GetMouseX();
 		static float GetMouseY();
 		static std::pair<float, float> GetMousePosition();
+		static std::pair<float, float> GetMouseDelta();
 
 		static void SetCursorMode(CursorMode mode);
 		static CursorMode GetCursorMode();
@@ -93,6 +94,9 @@ namespace Kanto
 		inline static std::map<KeyCode, KeyData> s_KeyData;
 		inline static std::map<MouseButton, ButtonData> s_MouseData;
 		inline static std::map<int, Controller> s_Controllers;
+		inline static float _prevMouseInit;
+		inline static float _prevMouseX;
+		inline static float _prevMouseY;
 	};
 
 }

@@ -34,7 +34,7 @@ namespace Kanto
 								 bool vsync)
 	{
 		_enableValidationLayers = true;
-		_maxFramesInFlight = 2;
+		MaxFramesInFlight = 2;
 
 		_textureSlots.resize(_maxTextures);
 		_textureIndex = 0;
@@ -65,7 +65,7 @@ namespace Kanto
 		ViewProjectionUniformBuffer = new VulkanUniformBuffer(PhysicalDevice->Device,
 			Device->Device,
 			sizeof(ViewProjectionUBO),
-			_maxFramesInFlight,
+			MaxFramesInFlight,
 			0,
 			1,
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -76,7 +76,7 @@ namespace Kanto
 		InstanceDataUniformBuffer = new VulkanUniformBuffer(PhysicalDevice->Device,
 			Device->Device,
 			sizeof(InstanceDataUBO),
-			_maxFramesInFlight,
+			MaxFramesInFlight,
 			1,
 			1,
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -87,7 +87,7 @@ namespace Kanto
 		CreateDescriptorSetLayout();
 
 		_quadPipeline = new VulkanPipeline(Device->Device,
-			_renderPass,
+			RenderPass,
 			PhysicalDevice->MsaaSamples,
 			_descriptorSetLayout,
 			"shaders/quad2dvert.spv",
@@ -98,7 +98,7 @@ namespace Kanto
 			VK_POLYGON_MODE_FILL);
 
 		_linePipeline = new VulkanPipeline(Device->Device,
-			_renderPass,
+			RenderPass,
 			PhysicalDevice->MsaaSamples,
 			_descriptorSetLayout,
 			"shaders/line2dvert.spv",
@@ -111,9 +111,9 @@ namespace Kanto
 
 		CreateCommandPool();
 
-		_frameBuffer = new VulkanFrameBuffer(*PhysicalDevice,
+		FrameBuffer = new VulkanFrameBuffer(*PhysicalDevice,
 			Device->Device,
-			_renderPass,
+			RenderPass,
 			SwapChain->SwapChainImageViews,
 			SwapChain->SwapChainExtent,
 			SwapChain->SwapChainImageFormat);
@@ -145,10 +145,10 @@ namespace Kanto
 		QuadVertexCount = 0;
 		QuadIndexCount = 0;
 
-		QuadVertexBuffer.resize(_maxFramesInFlight);
-		QuadVertices.resize(_maxFramesInFlight);
+		QuadVertexBuffer.resize(MaxFramesInFlight);
+		QuadVertices.resize(MaxFramesInFlight);
 
-		for (int i = 0; i < _maxFramesInFlight; i++)
+		for (int i = 0; i < MaxFramesInFlight; i++)
 		{
 			QuadVertexBuffer[i] = VulkanVertexBuffer();
 			QuadVertices[i] = new QuadVertex[_maxQuadVertices];
@@ -193,10 +193,10 @@ namespace Kanto
 		LineVertexCount = 0;
 		LineIndexCount = 0;
 
-		LineVertexBuffer.resize(_maxFramesInFlight);
-		LineVertices.resize(_maxFramesInFlight);
+		LineVertexBuffer.resize(MaxFramesInFlight);
+		LineVertices.resize(MaxFramesInFlight);
 
-		for (int i = 0; i < _maxFramesInFlight; i++)
+		for (int i = 0; i < MaxFramesInFlight; i++)
 		{
 			LineVertexBuffer[i] = VulkanVertexBuffer();
 			LineVertices[i] = new LineVertex[_maxLineVertices];
@@ -223,8 +223,8 @@ namespace Kanto
 	{
 		vkWaitForFences(Device->Device, 1, &_inFlightFences[CurrentFrame], VK_TRUE, UINT64_MAX);
 
-		uint32_t imageIndex;
-		VkResult result = vkAcquireNextImageKHR(Device->Device, SwapChain->SwapChain, UINT64_MAX, _imageAvailableSemaphores[CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+		//uint32_t imageIndex;
+		VkResult result = vkAcquireNextImageKHR(Device->Device, SwapChain->SwapChain, UINT64_MAX, _imageAvailableSemaphores[CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
@@ -252,14 +252,188 @@ namespace Kanto
 
 	void VulkanContext::EndScene()
 	{
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		if (vkBeginCommandBuffer(CommandBuffers[CurrentFrame], &beginInfo) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to begin recording command buffer!");
+		}
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = RenderPass;
+		renderPassInfo.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex];
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = SwapChain->SwapChainExtent;
+
+		std::array<VkClearValue, 2> clearValues{};
+		clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+		clearValues[1].depthStencil = { 1.0f, 0 };
+
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo.pClearValues = clearValues.data();
+
+		vkCmdBeginRenderPass(CommandBuffers[CurrentFrame], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		//we can do this after viewport and scissor
+		//vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicsPipeline);
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = (float)SwapChain->SwapChainExtent.width;
+		viewport.height = (float)SwapChain->SwapChainExtent.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(CommandBuffers[CurrentFrame], 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = SwapChain->SwapChainExtent;
+		vkCmdSetScissor(CommandBuffers[CurrentFrame], 0, 1, &scissor);
+
+		//2D quad rendering
+		if (QuadVertexCount > 0)
+		{
+			vkCmdBindPipeline(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->Pipeline  /*_GraphicsPipeline2DQuad*/);
+
+			//moved here, still causes errors
+			UpdateTextureDescriptorSets();
+
+			vkCmdBindDescriptorSets(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->PipelineLayout /*_pipelineLayout2DQuad*/, 0, 1, &_descriptorSets[CurrentFrame], 0, nullptr);
+
+			QuadVertexBuffer[CurrentFrame].LoadVertices(QuadVertices[CurrentFrame],
+				QuadVertexCount,
+				PhysicalDevice->Device,
+				Device->Device,
+				Device->GraphicsQueue,
+				CommandPool);
+
+			VkBuffer vertexBuffers[] = { QuadVertexBuffer[CurrentFrame].VertexBuffer };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(CommandBuffers[CurrentFrame], 0, 1, vertexBuffers, offsets);
+
+			vkCmdBindIndexBuffer(CommandBuffers[CurrentFrame], QuadIndexBuffer.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			vkCmdDrawIndexed(CommandBuffers[CurrentFrame],
+				static_cast<uint32_t>(QuadIndexCount * sizeof(uint32_t)),
+				1,
+				0,
+				0,
+				0);
+
+			QuadVertexCount = 0;
+			QuadIndexCount = 0;
+		}
+		//END 2D quad rendering END
+
+		//2d line rendering
+		if (LineVertexCount > 0)
+		{
+			vkCmdBindPipeline(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _linePipeline->Pipeline);
+
+			vkCmdBindDescriptorSets(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _linePipeline->PipelineLayout, 0, 1, &_descriptorSets[CurrentFrame], 0, nullptr);
+
+			LineVertexBuffer[CurrentFrame].LoadVertices(LineVertices[CurrentFrame],
+				LineVertexCount,
+				PhysicalDevice->Device,
+				Device->Device,
+				Device->GraphicsQueue,
+				CommandPool);
+
+			VkBuffer vertexBuffers[] = { LineVertexBuffer[CurrentFrame].VertexBuffer };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(CommandBuffers[CurrentFrame], 0, 1, vertexBuffers, offsets);
+
+			vkCmdBindIndexBuffer(CommandBuffers[CurrentFrame], LineIndexBuffer.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			vkCmdDrawIndexed(CommandBuffers[CurrentFrame],
+				static_cast<uint32_t>(LineIndexCount * sizeof(uint32_t)),
+				1,
+				0,
+				0,
+				0);
+
+			LineVertexCount = 0;
+			LineIndexCount = 0;
+		}
+		//END 2D line rendering END
+
+		vkCmdEndRenderPass(CommandBuffers[CurrentFrame]);
+
+		if (vkEndCommandBuffer(CommandBuffers[CurrentFrame]) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to record command buffer!");
+		}
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+		VkSemaphore waitSemaphores[] = { _imageAvailableSemaphores[CurrentFrame] };
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+		submitInfo.pWaitDstStageMask = waitStages;
+
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &CommandBuffers[CurrentFrame];
+
+		VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[CurrentFrame] };
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSemaphores;
+
+		if (vkQueueSubmit(Device->GraphicsQueue, 1, &submitInfo, _inFlightFences[CurrentFrame]) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to submit draw command buffer!");
+		}
+	}
+
+	void VulkanContext::EndFrame()
+	{
+
+	}
+
+	void VulkanContext::Present(GLFWwindow* window)
+	{
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+		presentInfo.waitSemaphoreCount = 1;
+
+		VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[CurrentFrame] };
+		presentInfo.pWaitSemaphores = signalSemaphores;
+
+		VkSwapchainKHR swapChains[] = { SwapChain->SwapChain };
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapChains;
+
+		presentInfo.pImageIndices = &ImageIndex;
+
+		VkResult result = vkQueuePresentKHR(Device->PresentQueue, &presentInfo);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || FrameBufferResized)
+		{
+			FrameBufferResized = false;
+			RecreateSwapChain(window);
+		}
+		else if (result != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to present swap chain image!");
+		}
+
+		CurrentFrame = (CurrentFrame + 1) % MaxFramesInFlight;
+
+		//Reset Quad rendering textures
+		_textureIndex = 1;
 	}
 
 	void VulkanContext::DrawFrame(GLFWwindow* window)
 	{
 		vkWaitForFences(Device->Device, 1, &_inFlightFences[CurrentFrame], VK_TRUE, UINT64_MAX);
 
-		uint32_t imageIndex;
-		VkResult result = vkAcquireNextImageKHR(Device->Device, SwapChain->SwapChain, UINT64_MAX, _imageAvailableSemaphores[CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+		//uint32_t imageIndex;
+		VkResult result = vkAcquireNextImageKHR(Device->Device, SwapChain->SwapChain, UINT64_MAX, _imageAvailableSemaphores[CurrentFrame], VK_NULL_HANDLE, &ImageIndex);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
@@ -275,7 +449,7 @@ namespace Kanto
 
 		vkResetCommandBuffer(CommandBuffers[CurrentFrame], /*VkCommandBufferResetFlagBits*/ 0);
 
-		RecordCommandBuffer(CommandBuffers[CurrentFrame], imageIndex);
+		RecordCommandBuffer(CommandBuffers[CurrentFrame]);
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -308,7 +482,7 @@ namespace Kanto
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapChains;
 
-		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.pImageIndices = &ImageIndex;
 
 		result = vkQueuePresentKHR(Device->PresentQueue, &presentInfo);
 
@@ -322,7 +496,7 @@ namespace Kanto
 			throw std::runtime_error("failed to present swap chain image!");
 		}
 
-		CurrentFrame = (CurrentFrame + 1) % _maxFramesInFlight;
+		CurrentFrame = (CurrentFrame + 1) % MaxFramesInFlight;
 
 		//Reset Quad rendering textures
 		_textureIndex = 1;
@@ -337,8 +511,8 @@ namespace Kanto
 		ImGui::DestroyContext();
 
 
-		delete _frameBuffer;
-		_frameBuffer = nullptr;
+		delete FrameBuffer;
+		FrameBuffer = nullptr;
 
 		delete SwapChain;
 		SwapChain = nullptr;
@@ -347,7 +521,7 @@ namespace Kanto
 		vkDestroyPipelineLayout(Device->Device, _pipelineLayout2DQuad, nullptr);*/
 		_quadPipeline->Dispose(Device->Device);
 
-		vkDestroyRenderPass(Device->Device, _renderPass, nullptr);
+		vkDestroyRenderPass(Device->Device, RenderPass, nullptr);
 
 		delete ViewProjectionUniformBuffer;
 		ViewProjectionUniformBuffer = nullptr;
@@ -371,7 +545,7 @@ namespace Kanto
 		delete VertexBuffer;
 		VertexBuffer = nullptr;*/
 
-		for (size_t i = 0; i < _maxFramesInFlight; i++)
+		for (size_t i = 0; i < MaxFramesInFlight; i++)
 		{
 			vkDestroySemaphore(Device->Device, _renderFinishedSemaphores[i], nullptr);
 			vkDestroySemaphore(Device->Device, _imageAvailableSemaphores[i], nullptr);
@@ -392,7 +566,7 @@ namespace Kanto
 		vkDestroyInstance(Instance, nullptr);
 	}
 
-	void VulkanContext::RecordImGuiCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+	void VulkanContext::RecordImGuiCommandBuffer(/*VkCommandBuffer commandBuffer, uint32_t imageIndex*/)
 	{
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -413,7 +587,7 @@ namespace Kanto
 		drawCmdBufInfo.pNext = nullptr;
 
 		//VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
-		VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &drawCmdBufInfo));
+		VK_CHECK_RESULT(vkBeginCommandBuffer(CommandBuffers[CurrentFrame]   /*commandBuffer*/, &drawCmdBufInfo));
 
 		VkRenderPassBeginInfo renderPassBeginInfo = {};
 		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -423,21 +597,21 @@ namespace Kanto
 		renderPassBeginInfo.renderArea.extent = SwapChain->SwapChainExtent;
 		renderPassBeginInfo.clearValueCount = 2; // Color + depth
 		renderPassBeginInfo.pClearValues = clearValues;
-		renderPassBeginInfo.framebuffer = _frameBuffer->SwapChainFramebuffers[imageIndex]; //swapChain.GetCurrentFramebuffer();
+		renderPassBeginInfo.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex]; //swapChain.GetCurrentFramebuffer();
 
-		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+		vkCmdBeginRenderPass(CommandBuffers[CurrentFrame] /*commandBuffer*/, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
 		VkCommandBufferInheritanceInfo inheritanceInfo = {};
 		inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 		inheritanceInfo.renderPass = _imguiRenderPass;
-		inheritanceInfo.framebuffer = _frameBuffer->SwapChainFramebuffers[imageIndex];
+		inheritanceInfo.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex];
 
 		VkCommandBufferBeginInfo cmdBufInfo = {};
 		cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
 		cmdBufInfo.pInheritanceInfo = &inheritanceInfo;
 
-		VK_CHECK_RESULT(vkBeginCommandBuffer(_imguiCommandBuffers[imageIndex], &cmdBufInfo));
+		VK_CHECK_RESULT(vkBeginCommandBuffer(_imguiCommandBuffers[ImageIndex], &cmdBufInfo));
 
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
@@ -446,28 +620,28 @@ namespace Kanto
 		viewport.width = (float)SwapChain->SwapChainExtent.width;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(_imguiCommandBuffers[imageIndex], 0, 1, &viewport);
+		vkCmdSetViewport(_imguiCommandBuffers[ImageIndex], 0, 1, &viewport);
 
 		VkRect2D scissor = {};
 		scissor.extent.width = (float)SwapChain->SwapChainExtent.width;
 		scissor.extent.height = (float)SwapChain->SwapChainExtent.height;
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
-		vkCmdSetScissor(_imguiCommandBuffers[imageIndex], 0, 1, &scissor);
+		vkCmdSetScissor(_imguiCommandBuffers[ImageIndex], 0, 1, &scissor);
 
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(main_draw_data, _imguiCommandBuffers[imageIndex]);
+		ImGui_ImplVulkan_RenderDrawData(main_draw_data, _imguiCommandBuffers[ImageIndex]);
 
-		VK_CHECK_RESULT(vkEndCommandBuffer(_imguiCommandBuffers[imageIndex]));
+		VK_CHECK_RESULT(vkEndCommandBuffer(_imguiCommandBuffers[ImageIndex]));
 
 		std::vector<VkCommandBuffer> commandBuffers;
-		commandBuffers.push_back(_imguiCommandBuffers[imageIndex]);
+		commandBuffers.push_back(_imguiCommandBuffers[ImageIndex]);
 
-		vkCmdExecuteCommands(commandBuffer, uint32_t(commandBuffers.size()), commandBuffers.data());
+		vkCmdExecuteCommands(CommandBuffers[CurrentFrame] /*commandBuffer*/, uint32_t(commandBuffers.size()), commandBuffers.data());
 
-		vkCmdEndRenderPass(commandBuffer);
+		vkCmdEndRenderPass(CommandBuffers[CurrentFrame]   /*commandBuffer*/);
 
-		VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+		VK_CHECK_RESULT(vkEndCommandBuffer(CommandBuffers[CurrentFrame]   /*commandBuffer*/));
 
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		// Update and Render additional Platform Windows
@@ -478,7 +652,7 @@ namespace Kanto
 		}
 	}
 
-	void VulkanContext::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+	void VulkanContext::RecordCommandBuffer(VkCommandBuffer commandBuffer)
 	{
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -490,8 +664,8 @@ namespace Kanto
 
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = _renderPass;
-		renderPassInfo.framebuffer = _frameBuffer->SwapChainFramebuffers[imageIndex];
+		renderPassInfo.renderPass = RenderPass;
+		renderPassInfo.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex];
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = SwapChain->SwapChainExtent;
 
@@ -744,8 +918,8 @@ namespace Kanto
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
 
-		_imguiCommandBuffers.resize(_maxFramesInFlight);
-		for (uint32_t i = 0; i < _maxFramesInFlight; i++)
+		_imguiCommandBuffers.resize(MaxFramesInFlight);
+		for (uint32_t i = 0; i < MaxFramesInFlight; i++)
 			CreateCommandBuffer(_imguiCommandBuffers[i]);
 
 
@@ -753,6 +927,43 @@ namespace Kanto
 		s_ImGuiCommandBuffers.resize(framesInFlight);
 		for (uint32_t i = 0; i < framesInFlight; i++)
 			s_ImGuiCommandBuffers[i] = VulkanContext::GetCurrentDevice()->CreateSecondaryCommandBuffer("ImGuiSecondaryCoommandBuffer");*/
+	}
+
+	void VulkanContext::FlushCommandBuffer(VkCommandBuffer commandBuffer/*, VkQueue queue*/)
+	{
+		auto vulkanDevice = Device->Device;
+		auto queue = Device->GraphicsQueue;
+
+		const uint64_t DEFAULT_FENCE_TIMEOUT = 100000000000;
+
+		KN_CORE_ASSERT(commandBuffer != VK_NULL_HANDLE);
+
+		VK_CHECK_RESULT(vkEndCommandBuffer(commandBuffer));
+
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		// Create fence to ensure that the command buffer has finished executing
+		VkFenceCreateInfo fenceCreateInfo = {};
+		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceCreateInfo.flags = 0;
+		VkFence fence;
+		VK_CHECK_RESULT(vkCreateFence(vulkanDevice, &fenceCreateInfo, nullptr, &fence));
+
+		{
+			static std::mutex submissionLock;
+			std::scoped_lock<std::mutex> lock(submissionLock);
+
+			// Submit to the queue
+			VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, fence));
+		}
+		// Wait for the fence to signal that command buffer has finished executing
+		VK_CHECK_RESULT(vkWaitForFences(vulkanDevice, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
+
+		vkDestroyFence(vulkanDevice, fence, nullptr);
+		vkFreeCommandBuffers(vulkanDevice, CommandPool, 1, &commandBuffer);
 	}
 
 	void VulkanContext::InitializeInstance(const std::string& applicationName, const std::string& engineName)
@@ -797,9 +1008,9 @@ namespace Kanto
 
 	void VulkanContext::CreateSyncObjects()
 	{
-		_imageAvailableSemaphores.resize(_maxFramesInFlight);
-		_renderFinishedSemaphores.resize(_maxFramesInFlight);
-		_inFlightFences.resize(_maxFramesInFlight);
+		_imageAvailableSemaphores.resize(MaxFramesInFlight);
+		_renderFinishedSemaphores.resize(MaxFramesInFlight);
+		_inFlightFences.resize(MaxFramesInFlight);
 
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -808,7 +1019,7 @@ namespace Kanto
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		for (size_t i = 0; i < _maxFramesInFlight; i++)
+		for (size_t i = 0; i < MaxFramesInFlight; i++)
 		{
 			if (vkCreateSemaphore(Device->Device, &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]) != VK_SUCCESS ||
 				vkCreateSemaphore(Device->Device, &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]) != VK_SUCCESS ||
@@ -833,7 +1044,7 @@ namespace Kanto
 		vkDeviceWaitIdle(Device->Device);
 
 		bool vsync = true;
-		delete _frameBuffer;
+		delete FrameBuffer;
 		delete SwapChain;
 
 		VulkanSwapChainSupportDetails swapChainDetails = PhysicalDevice->QuerySwapChainSupport(Surface);
@@ -845,9 +1056,9 @@ namespace Kanto
 			vsync);
 
 
-		_frameBuffer = new VulkanFrameBuffer(*PhysicalDevice,
+		FrameBuffer = new VulkanFrameBuffer(*PhysicalDevice,
 			Device->Device,
-			_renderPass,
+			RenderPass,
 			SwapChain->SwapChainImageViews,
 			SwapChain->SwapChainExtent,
 			SwapChain->SwapChainImageFormat);
@@ -863,21 +1074,21 @@ namespace Kanto
 		for (int i = 0; i < sz; i++)
 		{
 			poolSizes[i].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			poolSizes[i].descriptorCount = static_cast<uint32_t>(_maxFramesInFlight);
+			poolSizes[i].descriptorCount = static_cast<uint32_t>(MaxFramesInFlight);
 		}
 
 		poolSizes[sz] = VkDescriptorPoolSize
 		{
 			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 			//Added Maxtextures here, previously just _maxFramesInFlight, so 1 texture slot per frame
-			.descriptorCount = static_cast<uint32_t>(_maxFramesInFlight * _maxTextures)
+			.descriptorCount = static_cast<uint32_t>(MaxFramesInFlight * _maxTextures)
 		};
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast<uint32_t>(_maxFramesInFlight);
+		poolInfo.maxSets = static_cast<uint32_t>(MaxFramesInFlight);
 
 		if (vkCreateDescriptorPool(Device->Device, &poolInfo, nullptr, &_descriptorPool) != VK_SUCCESS)
 		{
@@ -887,20 +1098,20 @@ namespace Kanto
 
 	void VulkanContext::CreateDescriptorSets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(_maxFramesInFlight, _descriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> layouts(MaxFramesInFlight, _descriptorSetLayout);
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = _descriptorPool;
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(_maxFramesInFlight);
+		allocInfo.descriptorSetCount = static_cast<uint32_t>(MaxFramesInFlight);
 		allocInfo.pSetLayouts = layouts.data();
 
-		_descriptorSets.resize(_maxFramesInFlight);
+		_descriptorSets.resize(MaxFramesInFlight);
 		if (vkAllocateDescriptorSets(Device->Device, &allocInfo, _descriptorSets.data()) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to allocate descriptor sets!");
 		}
 
-		for (size_t i = 0; i < _maxFramesInFlight; i++)
+		for (size_t i = 0; i < MaxFramesInFlight; i++)
 		{
 			size_t ubsSz = UniformBuffers.size();
 			std::vector<VkDescriptorBufferInfo> uniformBuffers(ubsSz);
@@ -1295,7 +1506,7 @@ namespace Kanto
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		if (vkCreateRenderPass(device->Device, &renderPassInfo, nullptr, &_renderPass) != VK_SUCCESS)
+		if (vkCreateRenderPass(device->Device, &renderPassInfo, nullptr, &RenderPass) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create render pass!");
 		}
@@ -1422,7 +1633,7 @@ namespace Kanto
 
 	void VulkanContext::CreateCommandBuffers()
 	{
-		CommandBuffers.resize(_maxFramesInFlight);
+		CommandBuffers.resize(MaxFramesInFlight);
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1448,5 +1659,20 @@ namespace Kanto
 		{
 			throw std::runtime_error("failed to allocate command buffers!");
 		}
+	}
+
+	VkCommandBuffer VulkanContext::CreateSecondaryCommandBuffer(const char* debugName)
+	{
+		VkCommandBuffer cmdBuffer;
+
+		VkCommandBufferAllocateInfo cmdBufAllocateInfo = {};
+		cmdBufAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		cmdBufAllocateInfo.commandPool = CommandPool; //Commandpool; //GetOrCreateThreadLocalCommandPool()->GetGraphicsCommandPool();
+		cmdBufAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+		cmdBufAllocateInfo.commandBufferCount = 1;
+
+		VK_CHECK_RESULT(vkAllocateCommandBuffers(Device->Device, &cmdBufAllocateInfo, &cmdBuffer));
+		VKUtils::SetDebugUtilsObjectName(Device->Device, VK_OBJECT_TYPE_COMMAND_BUFFER, debugName, cmdBuffer);
+		return cmdBuffer;
 	}
 }

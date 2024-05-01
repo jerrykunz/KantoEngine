@@ -19,7 +19,7 @@ namespace Kanto {
 
 	ImGuiLayer* ImGuiLayer::Create()
 	{
-		//return hnew VulkanImGuiLayer();
+		return hnew VulkanImGuiLayer();
 
 		/*switch (RendererAPI::Current())
 		{
