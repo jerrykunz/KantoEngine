@@ -195,32 +195,36 @@ namespace Kanto
 		ImGui_ImplVulkan_Init(&init_info);
 
 		// Upload Fonts
-		//if (true)
-		//{
-		//	// Use any command queue
+		if (true)
+		{
+			//new version
+			//not really necessary
+			ImGui_ImplVulkan_CreateFontsTexture();
 
-		//	VkCommandBuffer commandBuffer = vulkanContext->CommandBuffers[vulkanContext->CurrentFrame]; //vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
-		//	{
-		//		VkCommandBufferBeginInfo cmdBufferBeginInfo{};
-		//		cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		//		VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &cmdBufferBeginInfo));
-		//	}
+			//old
+			// Use any command queue
+			//VkCommandBuffer commandBuffer = vulkanContext->CommandBuffers[vulkanContext->CurrentFrame]; //vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
+			//{
+			//	VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+			//	cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			//	VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &cmdBufferBeginInfo));
+			//}
 
 
-		//	ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-		//	//vulkanContext->GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
-		//	vulkanContext->FlushCommandBuffer(commandBuffer); //here is where shit goes wrong, commandbuffer gets destroyed. Fixed, no longer happens.
+			//ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+			////vulkanContext->GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
+			//vulkanContext->FlushCommandBuffer(commandBuffer); //here is where shit goes wrong, commandbuffer gets destroyed. Fixed, no longer happens.
 
-		//	VK_CHECK_RESULT(vkDeviceWaitIdle(device));
-		//	ImGui_ImplVulkan_DestroyFontUploadObjects();
-		//}
-		/*
+			//VK_CHECK_RESULT(vkDeviceWaitIdle(device));
+			//ImGui_ImplVulkan_DestroyFontUploadObjects();
+		}
+		
 		uint32_t framesInFlight = vulkanContext->MaxFramesInFlight; //Renderer::GetConfig().FramesInFlight;
 		s_ImGuiCommandBuffers.resize(framesInFlight);
 
 		for (uint32_t i = 0; i < framesInFlight; i++)
 			s_ImGuiCommandBuffers[i] = vulkanContext->CreateSecondaryCommandBuffer("ImGuiSecondaryCommandBuffer"); //VulkanContext::GetCurrentDevice()->CreateSecondaryCommandBuffer("ImGuiSecondaryCommandBuffer");
-			*/
+			
 
 	}
 
@@ -242,6 +246,7 @@ namespace Kanto
 		//ImGuizmo::BeginFrame();
 	}
 
+	//somehow this works
 	void VulkanImGuiLayer::End()
 	{
 		ImGui::Render();
@@ -297,6 +302,7 @@ namespace Kanto
 
 		VK_CHECK_RESULT(vkBeginCommandBuffer(s_ImGuiCommandBuffers[commandBufferIndex], &cmdBufInfo));
 
+		//original, causes errors
 		/*VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = (float)height;
@@ -306,7 +312,7 @@ namespace Kanto
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(s_ImGuiCommandBuffers[commandBufferIndex], 0, 1, &viewport);*/
 
-		//test alternative
+		//alternative without errors
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;  // Set y coordinate to 0
@@ -338,10 +344,8 @@ namespace Kanto
 
 		VK_CHECK_RESULT(vkEndCommandBuffer(drawCommandBuffer));
 
-		auto lol = VulkanContext::Get()->CommandBuffers;
-
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		// Update and Render additional Platform Windows
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			ImGui::UpdatePlatformWindows();

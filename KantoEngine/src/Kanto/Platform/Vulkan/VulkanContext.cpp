@@ -369,18 +369,18 @@ namespace Kanto
 		//END 2D line rendering END
 
 		 //IMGUI (test)
-		{
-			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBuffers[CurrentFrame]);
+		//{
+		//	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBuffers[CurrentFrame]);
 
 
-			ImGuiIO& io = ImGui::GetIO(); (void)io;
-			// Update and Render additional Platform Windows
-			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-			{
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
-			}
-		}
+		//	ImGuiIO& io = ImGui::GetIO(); (void)io;
+		//	// Update and Render additional Platform Windows
+		//	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		//	{
+		//		ImGui::UpdatePlatformWindows();
+		//		ImGui::RenderPlatformWindowsDefault();
+		//	}
+		//}
 
 
 		vkCmdEndRenderPass(CommandBuffers[CurrentFrame]);

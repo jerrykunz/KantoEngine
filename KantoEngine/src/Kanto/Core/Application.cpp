@@ -258,19 +258,19 @@ namespace Kanto
 
 
 
-				ImGui_ImplVulkan_NewFrame();
+				/*ImGui_ImplVulkan_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
 				ImGui::NewFrame();
 				bool showdemo = true;
 				ImGui::ShowDemoWindow(&showdemo);
-				ImGui::Render();
+				ImGui::Render();*/
 
 
 
 				rendererContext->EndScene();
 
 				Application* app = this;
-				if (m_Specification.EnableImGui && false)
+				if (m_Specification.EnableImGui /*&& false*/)
 				{
 					RenderImGui();
 					//ImGui::Begin("Hello, world!");
