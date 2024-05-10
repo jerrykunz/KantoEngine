@@ -134,7 +134,7 @@ namespace Kanto
 
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
-
+		
 		bool isRawMouseMotionSupported = glfwRawMouseMotionSupported();
 		if (isRawMouseMotionSupported)
 			glfwSetInputMode(m_Window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
@@ -161,80 +161,80 @@ namespace Kanto
 			});
 
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-			{
-				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-				switch (action)
-				{
-				case GLFW_PRESS:
-				{
-					Input::UpdateKeyState((KeyCode)key, KeyState::Pressed);
-					KeyPressedEvent event((KeyCode)key, 0);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_RELEASE:
-				{
-					Input::UpdateKeyState((KeyCode)key, KeyState::Released);
-					KeyReleasedEvent event((KeyCode)key);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_REPEAT:
-				{
-					Input::UpdateKeyState((KeyCode)key, KeyState::Held);
-					KeyPressedEvent event((KeyCode)key, 1);
-					data.EventCallback(event);
-					break;
-				}
-				}
-			});
+			switch (action)
+			{
+			case GLFW_PRESS:
+			{
+				Input::UpdateKeyState((KeyCode)key, KeyState::Pressed);
+				KeyPressedEvent event((KeyCode)key, 0);
+				data.EventCallback(event);
+				break;
+			}
+			case GLFW_RELEASE:
+			{
+				Input::UpdateKeyState((KeyCode)key, KeyState::Released);
+				KeyReleasedEvent event((KeyCode)key);
+				data.EventCallback(event);
+				break;
+			}
+			case GLFW_REPEAT:
+			{
+				Input::UpdateKeyState((KeyCode)key, KeyState::Held);
+				KeyPressedEvent event((KeyCode)key, 1);
+				data.EventCallback(event);
+				break;
+			}
+			}
+		});
 
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, uint32_t codepoint)
-			{
-				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-				KeyTypedEvent event((KeyCode)codepoint);
-				data.EventCallback(event);
-			});
+			KeyTypedEvent event((KeyCode)codepoint);
+			data.EventCallback(event);
+		});
 
 		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
-			{
-				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-				switch (action)
-				{
-				case GLFW_PRESS:
-				{
-					Input::UpdateButtonState((MouseButton)button, KeyState::Pressed);
-					MouseButtonPressedEvent event((MouseButton)button);
-					data.EventCallback(event);
-					break;
-				}
-				case GLFW_RELEASE:
-				{
-					Input::UpdateButtonState((MouseButton)button, KeyState::Released);
-					MouseButtonReleasedEvent event((MouseButton)button);
-					data.EventCallback(event);
-					break;
-				}
-				}
-			});
+			switch (action)
+			{
+			case GLFW_PRESS:
+			{
+				Input::UpdateButtonState((MouseButton)button, KeyState::Pressed);
+				MouseButtonPressedEvent event((MouseButton)button);
+				data.EventCallback(event);
+				break;
+			}
+			case GLFW_RELEASE:
+			{
+				Input::UpdateButtonState((MouseButton)button, KeyState::Released);
+				MouseButtonReleasedEvent event((MouseButton)button);
+				data.EventCallback(event);
+				break;
+			}
+			}
+		});
 
 		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xOffset, double yOffset)
-			{
-				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
 
-				MouseScrolledEvent event((float)xOffset, (float)yOffset);
-				data.EventCallback(event);
-			});
+			MouseScrolledEvent event((float)xOffset, (float)yOffset);
+			data.EventCallback(event);
+		});
 
 		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double x, double y)
-			{
-				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
-				MouseMovedEvent event((float)x, (float)y);
-				data.EventCallback(event);
-			});
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			MouseMovedEvent event((float)x, (float)y);
+			data.EventCallback(event);
+		});
 
 
 		//this doesn't exist in latest glfw
@@ -246,11 +246,11 @@ namespace Kanto
 		});*/
 
 		glfwSetWindowIconifyCallback(m_Window, [](GLFWwindow* window, int iconified)
-			{
-				auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
-				WindowMinimizeEvent event((bool)iconified);
-				data.EventCallback(event);
-			});
+		{
+			auto& data = *((WindowData*)glfwGetWindowUserPointer(window));
+			WindowMinimizeEvent event((bool)iconified);
+			data.EventCallback(event);
+		});
 
 		m_ImGuiMouseCursors[ImGuiMouseCursor_Arrow] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
 		m_ImGuiMouseCursors[ImGuiMouseCursor_TextInput] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);

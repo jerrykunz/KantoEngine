@@ -215,6 +215,10 @@ namespace Kanto
 		{
 			auto& io = ImGui::GetIO();
 
+			//force imgui to work
+			mode = CursorMode::Normal;
+
+			//when cursor is locked on screen, don't allow any inputs to imgui.
 			if (mode == CursorMode::Normal)
 			{
 				io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;

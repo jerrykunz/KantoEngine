@@ -25,7 +25,17 @@
 namespace Kanto 
 {
 
+	static VkPipelineCache          g_PipelineCache = VK_NULL_HANDLE;
 	static std::vector<VkCommandBuffer> s_ImGuiCommandBuffers;
+
+	static void check_vk_result(VkResult err)
+	{
+		if (err == 0)
+			return;
+		fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+		if (err < 0)
+			abort();
+	}
 
 	VulkanImGuiLayer::VulkanImGuiLayer()
 	{
@@ -179,6 +189,9 @@ namespace Kanto
 		init_info.CheckVkResultFn = Utils::VulkanCheckResult;
 		//ImGui_ImplVulkan_Init(&init_info, vulkanContext->RenderPass /*swapChain.GetRenderPass()*/);
 		//ImGui_ImplVulkan_Init(&init_info, vulkanContext->RenderPass /*swapChain.GetRenderPass()*/);
+		//init_info.PipelineCache = g_PipelineCache;
+
+		init_info.CheckVkResultFn = check_vk_result;
 		ImGui_ImplVulkan_Init(&init_info);
 
 		// Upload Fonts

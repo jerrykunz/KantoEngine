@@ -37,6 +37,8 @@
 #include "Kanto/Platform/Vulkan/VulkanContext.h"
 #include "Base.h"
 #include "Camera.h"
+#include <backends/imgui_impl_vulkan.h>
+#include <backends/imgui_impl_glfw.h>
 
 extern bool g_ApplicationRunning;
 extern ImGuiContext* GImGui;
@@ -252,8 +254,18 @@ namespace Kanto
 
 
 				//test
-				RenderImGui();
+				//RenderImGui();
+
+
+
+				ImGui_ImplVulkan_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+				ImGui::NewFrame();
+				bool showdemo = true;
+				ImGui::ShowDemoWindow(&showdemo);
 				ImGui::Render();
+
+
 
 				rendererContext->EndScene();
 
