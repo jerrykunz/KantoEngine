@@ -43,6 +43,9 @@ namespace Kanto
 		InitializeDebugMessenger();
 		CreateSurface(window);
 
+		//test
+		Utils::VulkanLoadDebugUtilsExtensions(Instance);
+
 		PhysicalDevice = new VulkanPhysicalDevice(Instance,
 			Surface);
 
@@ -59,6 +62,10 @@ namespace Kanto
 			vsync);
 
 		CreateRenderPass(PhysicalDevice,
+			Device,
+			SwapChain->SwapChainImageFormat);
+
+		CreateImguiRenderPass(PhysicalDevice,
 			Device,
 			SwapChain->SwapChainImageFormat);
 
@@ -237,7 +244,7 @@ namespace Kanto
 		}
 
 		vkResetFences(Device->Device, 1, &_inFlightFences[CurrentFrame]);
-
+		
 		vkResetCommandBuffer(CommandBuffers[CurrentFrame], /*VkCommandBufferResetFlagBits*/ 0);
 	}
 
@@ -360,6 +367,21 @@ namespace Kanto
 		}
 		//END 2D line rendering END
 
+		 //IMGUI (test)
+		{
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBuffers[CurrentFrame]);
+
+
+			ImGuiIO& io = ImGui::GetIO(); (void)io;
+			// Update and Render additional Platform Windows
+			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			{
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
+			}
+		}
+
+
 		vkCmdEndRenderPass(CommandBuffers[CurrentFrame]);
 
 		if (vkEndCommandBuffer(CommandBuffers[CurrentFrame]) != VK_SUCCESS)
@@ -387,6 +409,15 @@ namespace Kanto
 		{
 			throw std::runtime_error("failed to submit draw command buffer!");
 		}
+
+		//TEST
+		VK_CHECK_RESULT(vkWaitForFences(Device->Device, 1, &_inFlightFences[CurrentFrame], VK_TRUE, UINT64_MAX));
+
+		//these two cause issues most likely
+		//VK_CHECK_RESULT(vkResetFences(Device->Device, 1, &_inFlightFences[CurrentFrame]));
+
+		// Reset the command buffer
+		//VK_CHECK_RESULT(vkResetCommandBuffer(CommandBuffers[CurrentFrame], 0));
 	}
 
 	void VulkanContext::EndFrame()
@@ -566,91 +597,91 @@ namespace Kanto
 		vkDestroyInstance(Instance, nullptr);
 	}
 
-	void VulkanContext::RecordImGuiCommandBuffer(/*VkCommandBuffer commandBuffer, uint32_t imageIndex*/)
-	{
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		ImGuizmo::BeginFrame();
+	//void VulkanContext::RecordImGuiCommandBuffer(/*VkCommandBuffer commandBuffer, uint32_t imageIndex*/)
+	//{
+	//	ImGui_ImplVulkan_NewFrame();
+	//	ImGui_ImplGlfw_NewFrame();
+	//	ImGui::NewFrame();
+	//	ImGuizmo::BeginFrame();
 
-		ImGui::Render();
+	//	ImGui::Render();
 
-		VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+	//	VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
 
-		VkClearValue clearValues[2];
-		clearValues[0].color = { {0.1f, 0.1f,0.1f, 1.0f} };
-		clearValues[1].depthStencil = { 1.0f, 0 };
+	//	VkClearValue clearValues[2];
+	//	clearValues[0].color = { {0.1f, 0.1f,0.1f, 1.0f} };
+	//	clearValues[1].depthStencil = { 1.0f, 0 };
 
-		VkCommandBufferBeginInfo drawCmdBufInfo = {};
-		drawCmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		drawCmdBufInfo.pNext = nullptr;
+	//	VkCommandBufferBeginInfo drawCmdBufInfo = {};
+	//	drawCmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	//	drawCmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	//	drawCmdBufInfo.pNext = nullptr;
 
-		//VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
-		VK_CHECK_RESULT(vkBeginCommandBuffer(CommandBuffers[CurrentFrame]   /*commandBuffer*/, &drawCmdBufInfo));
+	//	//VkCommandBuffer drawCommandBuffer = swapChain.GetCurrentDrawCommandBuffer();
+	//	VK_CHECK_RESULT(vkBeginCommandBuffer(CommandBuffers[CurrentFrame]   /*commandBuffer*/, &drawCmdBufInfo));
 
-		VkRenderPassBeginInfo renderPassBeginInfo = {};
-		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassBeginInfo.pNext = nullptr;
-		renderPassBeginInfo.renderPass = _imguiRenderPass;
-		renderPassBeginInfo.renderArea.offset = { 0, 0 };
-		renderPassBeginInfo.renderArea.extent = SwapChain->SwapChainExtent;
-		renderPassBeginInfo.clearValueCount = 2; // Color + depth
-		renderPassBeginInfo.pClearValues = clearValues;
-		renderPassBeginInfo.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex]; //swapChain.GetCurrentFramebuffer();
+	//	VkRenderPassBeginInfo renderPassBeginInfo = {};
+	//	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	//	renderPassBeginInfo.pNext = nullptr;
+	//	renderPassBeginInfo.renderPass = _imguiRenderPass;
+	//	renderPassBeginInfo.renderArea.offset = { 0, 0 };
+	//	renderPassBeginInfo.renderArea.extent = SwapChain->SwapChainExtent;
+	//	renderPassBeginInfo.clearValueCount = 2; // Color + depth
+	//	renderPassBeginInfo.pClearValues = clearValues;
+	//	renderPassBeginInfo.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex]; //swapChain.GetCurrentFramebuffer();
 
-		vkCmdBeginRenderPass(CommandBuffers[CurrentFrame] /*commandBuffer*/, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+	//	vkCmdBeginRenderPass(CommandBuffers[CurrentFrame] /*commandBuffer*/, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-		VkCommandBufferInheritanceInfo inheritanceInfo = {};
-		inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-		inheritanceInfo.renderPass = _imguiRenderPass;
-		inheritanceInfo.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex];
+	//	VkCommandBufferInheritanceInfo inheritanceInfo = {};
+	//	inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+	//	inheritanceInfo.renderPass = _imguiRenderPass;
+	//	inheritanceInfo.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex];
 
-		VkCommandBufferBeginInfo cmdBufInfo = {};
-		cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-		cmdBufInfo.pInheritanceInfo = &inheritanceInfo;
+	//	VkCommandBufferBeginInfo cmdBufInfo = {};
+	//	cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	//	cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+	//	cmdBufInfo.pInheritanceInfo = &inheritanceInfo;
 
-		VK_CHECK_RESULT(vkBeginCommandBuffer(_imguiCommandBuffers[ImageIndex], &cmdBufInfo));
+	//	VK_CHECK_RESULT(vkBeginCommandBuffer(_imguiCommandBuffers[ImageIndex], &cmdBufInfo));
 
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = (float)SwapChain->SwapChainExtent.height;
-		viewport.height = -(float)SwapChain->SwapChainExtent.height;
-		viewport.width = (float)SwapChain->SwapChainExtent.width;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(_imguiCommandBuffers[ImageIndex], 0, 1, &viewport);
+	//	VkViewport viewport = {};
+	//	viewport.x = 0.0f;
+	//	viewport.y = (float)SwapChain->SwapChainExtent.height;
+	//	viewport.height = -(float)SwapChain->SwapChainExtent.height;
+	//	viewport.width = (float)SwapChain->SwapChainExtent.width;
+	//	viewport.minDepth = 0.0f;
+	//	viewport.maxDepth = 1.0f;
+	//	vkCmdSetViewport(_imguiCommandBuffers[ImageIndex], 0, 1, &viewport);
 
-		VkRect2D scissor = {};
-		scissor.extent.width = (float)SwapChain->SwapChainExtent.width;
-		scissor.extent.height = (float)SwapChain->SwapChainExtent.height;
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		vkCmdSetScissor(_imguiCommandBuffers[ImageIndex], 0, 1, &scissor);
+	//	VkRect2D scissor = {};
+	//	scissor.extent.width = (float)SwapChain->SwapChainExtent.width;
+	//	scissor.extent.height = (float)SwapChain->SwapChainExtent.height;
+	//	scissor.offset.x = 0;
+	//	scissor.offset.y = 0;
+	//	vkCmdSetScissor(_imguiCommandBuffers[ImageIndex], 0, 1, &scissor);
 
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(main_draw_data, _imguiCommandBuffers[ImageIndex]);
+	//	ImDrawData* main_draw_data = ImGui::GetDrawData();
+	//	ImGui_ImplVulkan_RenderDrawData(main_draw_data, _imguiCommandBuffers[ImageIndex]);
 
-		VK_CHECK_RESULT(vkEndCommandBuffer(_imguiCommandBuffers[ImageIndex]));
+	//	VK_CHECK_RESULT(vkEndCommandBuffer(_imguiCommandBuffers[ImageIndex]));
 
-		std::vector<VkCommandBuffer> commandBuffers;
-		commandBuffers.push_back(_imguiCommandBuffers[ImageIndex]);
+	//	std::vector<VkCommandBuffer> commandBuffers;
+	//	commandBuffers.push_back(_imguiCommandBuffers[ImageIndex]);
 
-		vkCmdExecuteCommands(CommandBuffers[CurrentFrame] /*commandBuffer*/, uint32_t(commandBuffers.size()), commandBuffers.data());
+	//	vkCmdExecuteCommands(CommandBuffers[CurrentFrame] /*commandBuffer*/, uint32_t(commandBuffers.size()), commandBuffers.data());
 
-		vkCmdEndRenderPass(CommandBuffers[CurrentFrame]   /*commandBuffer*/);
+	//	vkCmdEndRenderPass(CommandBuffers[CurrentFrame]   /*commandBuffer*/);
 
-		VK_CHECK_RESULT(vkEndCommandBuffer(CommandBuffers[CurrentFrame]   /*commandBuffer*/));
+	//	VK_CHECK_RESULT(vkEndCommandBuffer(CommandBuffers[CurrentFrame]   /*commandBuffer*/));
 
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		// Update and Render additional Platform Windows
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-		}
-	}
+	//	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//	// Update and Render additional Platform Windows
+	//	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	//	{
+	//		ImGui::UpdatePlatformWindows();
+	//		ImGui::RenderPlatformWindowsDefault();
+	//	}
+	//}
 
 	void VulkanContext::RecordCommandBuffer(VkCommandBuffer commandBuffer)
 	{
@@ -883,6 +914,10 @@ namespace Kanto
 		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForVulkan(window, true);
 		ImGui_ImplVulkan_InitInfo init_info = {};
+
+		//was missing
+		init_info.MSAASamples = PhysicalDevice->MsaaSamples;
+
 		init_info.Instance = Instance;
 		init_info.PhysicalDevice = PhysicalDevice->Device; //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetVulkanPhysicalDevice();
 		init_info.Device = device;
@@ -963,7 +998,7 @@ namespace Kanto
 		VK_CHECK_RESULT(vkWaitForFences(vulkanDevice, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT));
 
 		vkDestroyFence(vulkanDevice, fence, nullptr);
-		vkFreeCommandBuffers(vulkanDevice, CommandPool, 1, &commandBuffer);
+		//vkFreeCommandBuffers(vulkanDevice, CommandPool, 1, &commandBuffer); //not removing the buffer, J addition
 	}
 
 	void VulkanContext::InitializeInstance(const std::string& applicationName, const std::string& engineName)
@@ -1434,6 +1469,180 @@ namespace Kanto
 	//RENDER PASS
 
 
+	//void VulkanContext::CreateRenderPass2(VulkanPhysicalDevice* physicalDevice,
+	//	VulkanDevice* device,
+	//	VkFormat& swapChainImageFormat)
+	//{
+	//	VkAttachmentDescription attachment = {};
+	//	attachment.format = swapChainImageFormat; //wd->SurfaceFormat.format;
+	//	attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	//	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; //wd->ClearEnable ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	//	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	//	attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	//	attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	//	attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	//	attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	//	VkAttachmentReference color_attachment = {};
+	//	color_attachment.attachment = 0;
+	//	color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	//	VkSubpassDescription subpass = {};
+	//	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	//	subpass.colorAttachmentCount = 1;
+	//	subpass.pColorAttachments = &color_attachment;
+
+	//	VkSubpassDependency dependency = {};
+	//	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	//	dependency.dstSubpass = 0;
+	//	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	//	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	//	dependency.srcAccessMask = 0;
+	//	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	//	VkRenderPassCreateInfo info = {};
+	//	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	//	info.attachmentCount = 1;
+	//	info.pAttachments = &attachment;
+	//	info.subpassCount = 1;
+	//	info.pSubpasses = &subpass;
+	//	info.dependencyCount = 1;
+	//	info.pDependencies = &dependency;
+
+	//	if (vkCreateRenderPass(device->Device, &info, nullptr, &RenderPass) != VK_SUCCESS)
+	//	{
+	//		throw std::runtime_error("failed to create render pass!");
+	//	}
+
+
+	//	/*VkAttachmentDescription colorAttachment{};
+	//	colorAttachment.format = swapChainImageFormat;
+	//	colorAttachment.samples = physicalDevice->MsaaSamples;
+	//	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	//	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	//	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	//	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	//	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	//	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	//	VkAttachmentDescription depthAttachment{};
+	//	depthAttachment.format = FindDepthFormat(physicalDevice->Device);
+	//	depthAttachment.samples = physicalDevice->MsaaSamples;
+	//	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	//	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	//	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	//	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	//	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	//	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	//	VkAttachmentDescription colorAttachmentResolve{};
+	//	colorAttachmentResolve.format = swapChainImageFormat;
+	//	colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+	//	colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	//	colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	//	colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	//	colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	//	colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	//	colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	//	VkAttachmentReference colorAttachmentRef{};
+	//	colorAttachmentRef.attachment = 0;
+	//	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	//	VkAttachmentReference depthAttachmentRef{};
+	//	depthAttachmentRef.attachment = 1;
+	//	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	//	VkAttachmentReference colorAttachmentResolveRef{};
+	//	colorAttachmentResolveRef.attachment = 2;
+	//	colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	//	VkSubpassDescription subpass{};
+	//	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	//	subpass.colorAttachmentCount = 1;
+	//	subpass.pColorAttachments = &colorAttachmentRef;
+	//	subpass.pDepthStencilAttachment = &depthAttachmentRef;
+	//	subpass.pResolveAttachments = &colorAttachmentResolveRef;
+
+	//	VkSubpassDependency dependency{};
+	//	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	//	dependency.dstSubpass = 0;
+	//	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	//	dependency.srcAccessMask = 0;
+	//	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	//	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+	//	std::array<VkAttachmentDescription, 3> attachments = { colorAttachment, depthAttachment, colorAttachmentResolve };
+	//	VkRenderPassCreateInfo renderPassInfo{};
+	//	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	//	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+	//	renderPassInfo.pAttachments = attachments.data();
+	//	renderPassInfo.subpassCount = 1;
+	//	renderPassInfo.pSubpasses = &subpass;
+	//	renderPassInfo.dependencyCount = 1;
+	//	renderPassInfo.pDependencies = &dependency;
+
+	//	if (vkCreateRenderPass(device->Device, &renderPassInfo, nullptr, &RenderPass) != VK_SUCCESS)
+	//	{
+	//		throw std::runtime_error("failed to create render pass!");
+	//	}*/
+	//}
+
+	//void VulkanContext::CreateImguiFrameBuffer()
+	//{
+	//	// Create The Image Views
+	//	{
+	//		VkImageViewCreateInfo info = {};
+	//		info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	//		info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	//		info.format = wd->SurfaceFormat.format;
+	//		info.components.r = VK_COMPONENT_SWIZZLE_R;
+	//		info.components.g = VK_COMPONENT_SWIZZLE_G;
+	//		info.components.b = VK_COMPONENT_SWIZZLE_B;
+	//		info.components.a = VK_COMPONENT_SWIZZLE_A;
+	//		VkImageSubresourceRange image_range = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+	//		info.subresourceRange = image_range;
+	//		for (uint32_t i = 0; i < wd->ImageCount; i++)
+	//		{
+	//			ImGui_ImplVulkanH_Frame* fd = &wd->Frames[i];
+	//			info.image = fd->Backbuffer;
+
+	//			if (vkCreateImageView(Device->Device, &info, nullptr, &fd->BackbufferView) != VK_SUCCESS)
+	//			{
+	//				throw std::runtime_error("failed to CreateImguiFrameBuffer!");
+	//			}
+	//				
+
+	//		}
+	//	}
+
+	//	// Create Framebuffer
+	//	{
+	//		VkImageView attachment[1]; //original
+	//		//VkImageView attachment[3];
+	//		VkFramebufferCreateInfo info = {};
+	//		info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	//		info.renderPass = RenderPassImgui; //wd->RenderPass;
+	//		info.attachmentCount = 1; //original
+	//		//info.attachmentCount = 3;
+	//		info.pAttachments = attachment;
+	//		info.width = wd->Width;
+	//		info.height = wd->Height;
+	//		info.layers = 1;
+	//		for (uint32_t i = 0; i < wd->ImageCount; i++)
+	//		{
+	//			ImGui_ImplVulkanH_Frame* fd = &wd->Frames[i];
+	//			attachment[0] = fd->BackbufferView;
+	//			/*err = vkCreateFramebuffer(device, &info, allocator, &fd->Framebuffer);
+	//			check_vk_result(err);*/
+
+	//			if (vkCreateFramebuffer(Device->Device, &info, nullptr, &fd->Framebuffer) != VK_SUCCESS)
+	//			{
+	//				throw std::runtime_error("failed to CreateImguiFrameBuffer!");
+	//			}
+	//		}
+	//	}
+	//}
 
 	void VulkanContext::CreateRenderPass(VulkanPhysicalDevice* physicalDevice,
 		VulkanDevice* device,
@@ -1510,6 +1719,107 @@ namespace Kanto
 		{
 			throw std::runtime_error("failed to create render pass!");
 		}
+	}
+
+
+	void VulkanContext::CreateImguiRenderPass(VulkanPhysicalDevice* physicalDevice,
+		VulkanDevice* device,
+		VkFormat& swapChainImageFormat)
+	{
+		VkAttachmentDescription attachment = {};
+		attachment.format = VK_FORMAT_B8G8R8A8_SRGB; // wd->SurfaceFormat.format;
+		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; //wd->ClearEnable ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		VkAttachmentReference color_attachment = {};
+		color_attachment.attachment = 0;
+		color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		VkSubpassDescription subpass = {};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &color_attachment;
+		VkSubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		VkRenderPassCreateInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		info.attachmentCount = 1;
+		info.pAttachments = &attachment;
+		info.subpassCount = 1;
+		info.pSubpasses = &subpass;
+		info.dependencyCount = 1;
+		info.pDependencies = &dependency;
+
+		/*err = vkCreateRenderPass(device, &info, allocator, &wd->RenderPass);
+		check_vk_result(err);*/
+
+		if (vkCreateRenderPass(device->Device, &info, nullptr, &RenderPassImgui) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create render pass!");
+		}
+
+		
+
+
+		//// Render Pass
+		//VkAttachmentDescription colorAttachmentDesc = {};
+		//// Color attachment
+		//colorAttachmentDesc.format = swapChainImageFormat;
+		//colorAttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
+		//colorAttachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		//colorAttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		//colorAttachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		//colorAttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		//colorAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		//colorAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		//VkAttachmentReference colorReference = {};
+		//colorReference.attachment = 0;
+		//colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		//VkAttachmentReference depthReference = {};
+		//depthReference.attachment = 1;
+		//depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		//VkSubpassDescription subpassDescription = {};
+		//subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		//subpassDescription.colorAttachmentCount = 1;
+		//subpassDescription.pColorAttachments = &colorReference;
+		//subpassDescription.inputAttachmentCount = 0;
+		//subpassDescription.pInputAttachments = nullptr;
+		//subpassDescription.preserveAttachmentCount = 0;
+		//subpassDescription.pPreserveAttachments = nullptr;
+		//subpassDescription.pResolveAttachments = nullptr;
+
+		//VkSubpassDependency dependency = {};
+		//dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		//dependency.dstSubpass = 0;
+		//dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		//dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		//dependency.srcAccessMask = 0;
+		//dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		//VkRenderPassCreateInfo renderPassInfo = {};
+		//renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		//renderPassInfo.attachmentCount = 1;
+		//renderPassInfo.pAttachments = &colorAttachmentDesc;
+		//renderPassInfo.subpassCount = 1;
+		//renderPassInfo.pSubpasses = &subpassDescription;
+		//renderPassInfo.dependencyCount = 1;
+		//renderPassInfo.pDependencies = &dependency;
+
+		//if (vkCreateRenderPass(device->Device, &renderPassInfo, nullptr, &RenderPassImgui) != VK_SUCCESS)
+		//{
+		//	throw std::runtime_error("failed to create render pass!");
+		//}
 	}
 
 	VkFormat VulkanContext::FindDepthFormat(VkPhysicalDevice physicalDevice)
@@ -1669,7 +1979,7 @@ namespace Kanto
 		cmdBufAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		cmdBufAllocateInfo.commandPool = CommandPool; //Commandpool; //GetOrCreateThreadLocalCommandPool()->GetGraphicsCommandPool();
 		cmdBufAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-		cmdBufAllocateInfo.commandBufferCount = 1;
+		cmdBufAllocateInfo.commandBufferCount = 1;		
 
 		VK_CHECK_RESULT(vkAllocateCommandBuffers(Device->Device, &cmdBufAllocateInfo, &cmdBuffer));
 		VKUtils::SetDebugUtilsObjectName(Device->Device, VK_OBJECT_TYPE_COMMAND_BUFFER, debugName, cmdBuffer);

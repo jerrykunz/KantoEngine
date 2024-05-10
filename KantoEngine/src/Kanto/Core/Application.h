@@ -28,7 +28,7 @@ namespace Kanto
 		std::string WorkingDirectory;
 		bool StartMaximized = false; //true;
 		bool Resizable = true;
-		bool EnableImGui = false;
+		bool EnableImGui = true;
 		//ScriptEngineConfig ScriptConfig;
 		//RendererConfig RenderConfig;
 		//ThreadingPolicy CoreThreadingPolicy = ThreadingPolicy::MultiThreaded;

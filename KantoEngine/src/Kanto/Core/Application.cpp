@@ -250,12 +250,23 @@ namespace Kanto
 					glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
 					glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
+
+				//test
+				RenderImGui();
+				ImGui::Render();
+
 				rendererContext->EndScene();
 
 				Application* app = this;
-				if (m_Specification.EnableImGui)
+				if (m_Specification.EnableImGui && false)
 				{
 					RenderImGui();
+					//ImGui::Begin("Hello, world!");
+					//ImGui::Text("This is some useful text.");
+					//ImGui::End();
+					///*bool showdemo = true;
+					//ImGui::ShowDemoWindow(&showdemo);*/
+
 					m_ImGuiLayer->End();
 				}
 

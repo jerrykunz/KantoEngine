@@ -81,6 +81,13 @@ namespace Kanto
 		void CreateRenderPass(VulkanPhysicalDevice* physicalDevice,
 			VulkanDevice* device,
 			VkFormat& swapChainImageFormat);
+		/*void CreateRenderPass2(VulkanPhysicalDevice* physicalDevice,
+			VulkanDevice* device,
+			VkFormat& swapChainImageFormat);*/
+		void CreateImguiRenderPass(VulkanPhysicalDevice* physicalDevice,
+			VulkanDevice* device,
+			VkFormat& swapChainImageFormat);
+		//void CreateImguiFrameBuffer();
 		VkFormat FindDepthFormat(VkPhysicalDevice physicalDevice);
 		VkFormat FindSupportedFormat(VkPhysicalDevice physicalDevice,
 			const std::vector<VkFormat>& candidates,
@@ -132,6 +139,7 @@ namespace Kanto
 		VkInstance Instance;
 		VkSurfaceKHR Surface;
 		VkRenderPass RenderPass;
+		VkRenderPass RenderPassImgui;
 
 		VkCommandPool CommandPool;
 

@@ -52,6 +52,7 @@ namespace Kanto
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
 		// Configure Fonts
+		if (false)
 		{
 			UI::FontConfiguration robotoBold;
 			robotoBold.FontName = "Bold";
@@ -104,7 +105,7 @@ namespace Kanto
 			robotoBoldTitle.Size = 16.0f;
 			UI::Fonts::Add(robotoBoldTitle);
 		}
-
+		/*
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
 		SetDarkThemeV2Colors();
@@ -117,7 +118,7 @@ namespace Kanto
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 		style.Colors[ImGuiCol_WindowBg] = ImVec4(0.15f, 0.15f, 0.15f, style.Colors[ImGuiCol_WindowBg].w);
-
+		*/
 		VulkanImGuiLayer* instance = this;
 
 		Application& app = Application::Get();
@@ -153,12 +154,21 @@ namespace Kanto
 
 		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForVulkan(window, true);
+
+
+
 		ImGui_ImplVulkan_InitInfo init_info = {};
-		init_info.Instance = VulkanContext::Get()->Instance; //VulkanContext::GetInstance();
-		init_info.PhysicalDevice = VulkanContext::Get()->PhysicalDevice->Device; //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetVulkanPhysicalDevice();
+
+		//for normal renderpass
+		init_info.MSAASamples = vulkanContext->PhysicalDevice->MsaaSamples; //added by J
+		//for imgui renderpass
+		//init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT; //VulkanContext::Get()->PhysicalDevice->MsaaSamples; //added by J
+
+		init_info.Instance = vulkanContext->Instance; //VulkanContext::GetInstance();
+		init_info.PhysicalDevice = vulkanContext->PhysicalDevice->Device; //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetVulkanPhysicalDevice();
 		init_info.Device = device;
-		init_info.QueueFamily = VulkanContext::Get()->PhysicalDevice->QueueIndices.graphicsFamily.value(); //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics;
-		init_info.Queue = VulkanContext::Get()->Device->GraphicsQueue; //VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
+		init_info.QueueFamily = vulkanContext->PhysicalDevice->QueueIndices.graphicsFamily.value(); //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics;
+		init_info.Queue = vulkanContext->Device->GraphicsQueue; //VulkanContext::GetCurrentDevice()->GetGraphicsQueue();
 		init_info.PipelineCache = nullptr;
 		init_info.DescriptorPool = descriptorPool;
 		init_info.Allocator = nullptr;
@@ -166,25 +176,37 @@ namespace Kanto
 		VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
 		init_info.ImageCount = swapChain.SwapChainImages.size(); //swapChain.GetImageCount();
 		init_info.CheckVkResultFn = Utils::VulkanCheckResult;
+		//ImGui_ImplVulkan_Init(&init_info, vulkanContext->RenderPass /*swapChain.GetRenderPass()*/);
 		ImGui_ImplVulkan_Init(&init_info, vulkanContext->RenderPass /*swapChain.GetRenderPass()*/);
 
 		// Upload Fonts
+		if (true)
 		{
 			// Use any command queue
 
 			VkCommandBuffer commandBuffer = vulkanContext->CommandBuffers[vulkanContext->CurrentFrame]; //vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
+			{
+				VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+				cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &cmdBufferBeginInfo));
+			}
+
+
 			ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
 			//vulkanContext->GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
-			vulkanContext->FlushCommandBuffer(commandBuffer);
+			vulkanContext->FlushCommandBuffer(commandBuffer); //here is where shit goes wrong, commandbuffer gets destroyed. Fixed, no longer happens.
 
 			VK_CHECK_RESULT(vkDeviceWaitIdle(device));
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
-
+		/*
 		uint32_t framesInFlight = vulkanContext->MaxFramesInFlight; //Renderer::GetConfig().FramesInFlight;
 		s_ImGuiCommandBuffers.resize(framesInFlight);
+
 		for (uint32_t i = 0; i < framesInFlight; i++)
 			s_ImGuiCommandBuffers[i] = vulkanContext->CreateSecondaryCommandBuffer("ImGuiSecondaryCommandBuffer"); //VulkanContext::GetCurrentDevice()->CreateSecondaryCommandBuffer("ImGuiSecondaryCommandBuffer");
+			*/
+
 	}
 
 	void VulkanImGuiLayer::OnDetach()
@@ -202,7 +224,7 @@ namespace Kanto
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-		ImGuizmo::BeginFrame();
+		//ImGuizmo::BeginFrame();
 	}
 
 	void VulkanImGuiLayer::End()
@@ -236,6 +258,7 @@ namespace Kanto
 		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassBeginInfo.pNext = nullptr;
 		renderPassBeginInfo.renderPass = VulkanContext::Get()->RenderPass; //swapChain.GetRenderPass();
+		//renderPassBeginInfo.renderPass = VulkanContext::Get()->RenderPassImgui;
 		renderPassBeginInfo.renderArea.offset.x = 0;
 		renderPassBeginInfo.renderArea.offset.y = 0;
 		renderPassBeginInfo.renderArea.extent.width = width;
@@ -249,6 +272,7 @@ namespace Kanto
 		VkCommandBufferInheritanceInfo inheritanceInfo = {};
 		inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 		inheritanceInfo.renderPass = VulkanContext::Get()->RenderPass; //swapChain.GetRenderPass();
+		//inheritanceInfo.renderPass = VulkanContext::Get()->RenderPassImgui; //swapChain.GetRenderPass();
 		inheritanceInfo.framebuffer = frameBuffer; //swapChain.GetCurrentFramebuffer();
 
 		VkCommandBufferBeginInfo cmdBufInfo = {};
@@ -258,10 +282,20 @@ namespace Kanto
 
 		VK_CHECK_RESULT(vkBeginCommandBuffer(s_ImGuiCommandBuffers[commandBufferIndex], &cmdBufInfo));
 
-		VkViewport viewport = {};
+		/*VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = (float)height;
 		viewport.height = -(float)height;
+		viewport.width = (float)width;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(s_ImGuiCommandBuffers[commandBufferIndex], 0, 1, &viewport);*/
+
+		//test alternative
+		VkViewport viewport = {};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;  // Set y coordinate to 0
+		viewport.height = (float)height;  // Set height to positive value
 		viewport.width = (float)width;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
@@ -277,6 +311,7 @@ namespace Kanto
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
 		ImGui_ImplVulkan_RenderDrawData(main_draw_data, s_ImGuiCommandBuffers[commandBufferIndex]);
 
+
 		VK_CHECK_RESULT(vkEndCommandBuffer(s_ImGuiCommandBuffers[commandBufferIndex]));
 
 		std::vector<VkCommandBuffer> commandBuffers;
@@ -287,6 +322,8 @@ namespace Kanto
 		vkCmdEndRenderPass(drawCommandBuffer);
 
 		VK_CHECK_RESULT(vkEndCommandBuffer(drawCommandBuffer));
+
+		auto lol = VulkanContext::Get()->CommandBuffers;
 
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		// Update and Render additional Platform Windows
@@ -299,6 +336,13 @@ namespace Kanto
 
 	void VulkanImGuiLayer::OnImGuiRender()
 	{
+		/*ImGui::Begin("Hello, world!");
+		ImGui::Text("This is some useful text.");
+		ImGui::End();*/
+
+		//crashes everything
+		bool showdemo = true;
+		ImGui::ShowDemoWindow(&showdemo);
 	}
 
 }

@@ -5,6 +5,7 @@
 #include "Kanto/Core/Application.h"
 //#include "Kanto/ImGui/ImGui.h"
 
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -207,9 +208,25 @@ namespace Kanto
 	{
 		auto& window = static_cast<Window&>(Application::Get().GetWindow());
 		glfwSetInputMode(static_cast<GLFWwindow*>(window.GetNativeWindow()), GLFW_CURSOR, GLFW_CURSOR_NORMAL + (int)mode);
-		/*
+		
 		if (Application::Get().GetSpecification().EnableImGui)
-			UI::SetInputEnabled(mode == CursorMode::Normal);*/
+			//UI::SetInputEnabled(mode == CursorMode::Normal);
+			//written open, so other stuff is not needed
+		{
+			auto& io = ImGui::GetIO();
+
+			if (mode == CursorMode::Normal)
+			{
+				io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+				io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
+			}
+			else
+			{
+				io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+				io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
+			}
+
+		}
 	}
 
 	CursorMode Input::GetCursorMode()
