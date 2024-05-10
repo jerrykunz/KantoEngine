@@ -9,8 +9,8 @@
 #define IMGUI_IMPL_API
 #endif
 #include "backends/imgui_impl_glfw.h"
-#include "examples/imgui_impl_vulkan_with_textures.h"
-//#include "backends/imgui_impl_vulkan.h"
+//#include "examples/imgui_impl_vulkan_with_textures.h"
+#include "backends/imgui_impl_vulkan.h"
 
 #include "Kanto/Core/Application.h"
 #include <GLFW/glfw3.h>
@@ -173,32 +173,34 @@ namespace Kanto
 		init_info.DescriptorPool = descriptorPool;
 		init_info.Allocator = nullptr;
 		init_info.MinImageCount = 2;
+		init_info.RenderPass = vulkanContext->RenderPass;
 		VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
 		init_info.ImageCount = swapChain.SwapChainImages.size(); //swapChain.GetImageCount();
 		init_info.CheckVkResultFn = Utils::VulkanCheckResult;
 		//ImGui_ImplVulkan_Init(&init_info, vulkanContext->RenderPass /*swapChain.GetRenderPass()*/);
-		ImGui_ImplVulkan_Init(&init_info, vulkanContext->RenderPass /*swapChain.GetRenderPass()*/);
+		//ImGui_ImplVulkan_Init(&init_info, vulkanContext->RenderPass /*swapChain.GetRenderPass()*/);
+		ImGui_ImplVulkan_Init(&init_info);
 
 		// Upload Fonts
-		if (true)
-		{
-			// Use any command queue
+		//if (true)
+		//{
+		//	// Use any command queue
 
-			VkCommandBuffer commandBuffer = vulkanContext->CommandBuffers[vulkanContext->CurrentFrame]; //vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
-			{
-				VkCommandBufferBeginInfo cmdBufferBeginInfo{};
-				cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &cmdBufferBeginInfo));
-			}
+		//	VkCommandBuffer commandBuffer = vulkanContext->CommandBuffers[vulkanContext->CurrentFrame]; //vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
+		//	{
+		//		VkCommandBufferBeginInfo cmdBufferBeginInfo{};
+		//		cmdBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		//		VK_CHECK_RESULT(vkBeginCommandBuffer(commandBuffer, &cmdBufferBeginInfo));
+		//	}
 
 
-			ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-			//vulkanContext->GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
-			vulkanContext->FlushCommandBuffer(commandBuffer); //here is where shit goes wrong, commandbuffer gets destroyed. Fixed, no longer happens.
+		//	ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+		//	//vulkanContext->GetCurrentDevice()->FlushCommandBuffer(commandBuffer);
+		//	vulkanContext->FlushCommandBuffer(commandBuffer); //here is where shit goes wrong, commandbuffer gets destroyed. Fixed, no longer happens.
 
-			VK_CHECK_RESULT(vkDeviceWaitIdle(device));
-			ImGui_ImplVulkan_DestroyFontUploadObjects();
-		}
+		//	VK_CHECK_RESULT(vkDeviceWaitIdle(device));
+		//	ImGui_ImplVulkan_DestroyFontUploadObjects();
+		//}
 		/*
 		uint32_t framesInFlight = vulkanContext->MaxFramesInFlight; //Renderer::GetConfig().FramesInFlight;
 		s_ImGuiCommandBuffers.resize(framesInFlight);

@@ -12,7 +12,8 @@
 #endif
 #include <GLFW/glfw3.h>
 #include "backends/imgui_impl_glfw.h"
-#include "examples/imgui_impl_vulkan_with_textures.h"
+#include "backends/imgui_impl_vulkan.h"
+//#include "examples/imgui_impl_vulkan_with_textures.h"
 
 
 
@@ -878,91 +879,91 @@ namespace Kanto
 		}
 	}
 
-	void VulkanContext::CreateImGui()
-	{
-		Application& app = Application::Get();
-		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
+	//void VulkanContext::CreateImGui()
+	//{
+	//	Application& app = Application::Get();
+	//	GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
-		auto vulkanContext = VulkanContext::Get();
-		auto device = Device->Device;
+	//	auto vulkanContext = VulkanContext::Get();
+	//	auto device = Device->Device;
 
-		//VkDescriptorPool descriptorPool;
+	//	//VkDescriptorPool descriptorPool;
 
-		// Create Descriptor Pool
-		VkDescriptorPoolSize pool_sizes[] =
-		{
-			{ VK_DESCRIPTOR_TYPE_SAMPLER, 100 },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100 },
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 100 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
-			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 }
-		};
-		VkDescriptorPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
-		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
-		pool_info.pPoolSizes = pool_sizes;
-		VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &_imguiDescriptorPool));
+	//	// Create Descriptor Pool
+	//	VkDescriptorPoolSize pool_sizes[] =
+	//	{
+	//		{ VK_DESCRIPTOR_TYPE_SAMPLER, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
+	//		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 }
+	//	};
+	//	VkDescriptorPoolCreateInfo pool_info = {};
+	//	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	//	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	//	pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
+	//	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+	//	pool_info.pPoolSizes = pool_sizes;
+	//	VK_CHECK_RESULT(vkCreateDescriptorPool(device, &pool_info, nullptr, &_imguiDescriptorPool));
 
-		// Setup Platform/Renderer bindings
-		ImGui_ImplGlfw_InitForVulkan(window, true);
-		ImGui_ImplVulkan_InitInfo init_info = {};
+	//	// Setup Platform/Renderer bindings
+	//	ImGui_ImplGlfw_InitForVulkan(window, true);
+	//	ImGui_ImplVulkan_InitInfo init_info = {};
 
-		//was missing
-		init_info.MSAASamples = PhysicalDevice->MsaaSamples;
+	//	//was missing
+	//	init_info.MSAASamples = PhysicalDevice->MsaaSamples;
 
-		init_info.Instance = Instance;
-		init_info.PhysicalDevice = PhysicalDevice->Device; //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetVulkanPhysicalDevice();
-		init_info.Device = device;
-		init_info.QueueFamily = (uint32_t)PhysicalDevice->QueueIndices.graphicsFamily.value_or(-1); //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics;
-		init_info.Queue = Device->GraphicsQueue;
-		init_info.PipelineCache = nullptr;
-		init_info.DescriptorPool = _imguiDescriptorPool;
-		init_info.Allocator = nullptr;
-		init_info.MinImageCount = 2;
-		VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
-		init_info.ImageCount = swapChain.SwapChainImages.size(); //.GetImageCount();
-		init_info.CheckVkResultFn = Utils::VulkanCheckResult;
+	//	init_info.Instance = Instance;
+	//	init_info.PhysicalDevice = PhysicalDevice->Device; //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetVulkanPhysicalDevice();
+	//	init_info.Device = device;
+	//	init_info.QueueFamily = (uint32_t)PhysicalDevice->QueueIndices.graphicsFamily.value_or(-1); //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetQueueFamilyIndices().Graphics;
+	//	init_info.Queue = Device->GraphicsQueue;
+	//	init_info.PipelineCache = nullptr;
+	//	init_info.DescriptorPool = _imguiDescriptorPool;
+	//	init_info.Allocator = nullptr;
+	//	init_info.MinImageCount = 2;
+	//	VulkanSwapChain& swapChain = Application::Get().GetWindow().GetSwapChain();
+	//	init_info.ImageCount = swapChain.SwapChainImages.size(); //.GetImageCount();
+	//	init_info.CheckVkResultFn = Utils::VulkanCheckResult;
 
-		CreateImGuiRenderPass(PhysicalDevice, Device, SwapChain->SwapChainImageFormat);
-		ImGui_ImplVulkan_Init(&init_info, _imguiRenderPass);
+	//	CreateImGuiRenderPass(PhysicalDevice, Device, SwapChain->SwapChainImageFormat);
+	//	ImGui_ImplVulkan_Init(&init_info, _imguiRenderPass);
 
-		// Upload Fonts
-		{
-			// Use any command queue
+	//	// Upload Fonts
+	//	//{
+	//	//	// Use any command queue
 
-			//VkCommandBuffer commandBuffer = vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
-			VkCommandBuffer tempBuff;
-			CreateCommandBuffer(tempBuff);
-			ImGui_ImplVulkan_CreateFontsTexture(tempBuff);
-			//vkResetCommandBuffer(_imguiCommandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
-			VK_CHECK_RESULT(vkEndCommandBuffer(tempBuff));
-			vkFreeCommandBuffers(device, CommandPool, 1, &tempBuff);
+	//	//	//VkCommandBuffer commandBuffer = vulkanContext->GetCurrentDevice()->GetCommandBuffer(true);
+	//	//	VkCommandBuffer tempBuff;
+	//	//	CreateCommandBuffer(tempBuff);
+	//	//	ImGui_ImplVulkan_CreateFontsTexture(tempBuff);
+	//	//	//vkResetCommandBuffer(_imguiCommandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
+	//	//	VK_CHECK_RESULT(vkEndCommandBuffer(tempBuff));
+	//	//	vkFreeCommandBuffers(device, CommandPool, 1, &tempBuff);
 
-			//vulkanContext->GetCurrentDevice()->FlushCommandBuffer(_imguiCommandBuffer);
-
-
-			VK_CHECK_RESULT(vkDeviceWaitIdle(device));
-			ImGui_ImplVulkan_DestroyFontUploadObjects();
-		}
-
-		_imguiCommandBuffers.resize(MaxFramesInFlight);
-		for (uint32_t i = 0; i < MaxFramesInFlight; i++)
-			CreateCommandBuffer(_imguiCommandBuffers[i]);
+	//	//	//vulkanContext->GetCurrentDevice()->FlushCommandBuffer(_imguiCommandBuffer);
 
 
-		/*uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
-		s_ImGuiCommandBuffers.resize(framesInFlight);
-		for (uint32_t i = 0; i < framesInFlight; i++)
-			s_ImGuiCommandBuffers[i] = VulkanContext::GetCurrentDevice()->CreateSecondaryCommandBuffer("ImGuiSecondaryCoommandBuffer");*/
-	}
+	//	//	VK_CHECK_RESULT(vkDeviceWaitIdle(device));
+	//	//	ImGui_ImplVulkan_DestroyFontUploadObjects();
+	//	//}
+
+	//	_imguiCommandBuffers.resize(MaxFramesInFlight);
+	//	for (uint32_t i = 0; i < MaxFramesInFlight; i++)
+	//		CreateCommandBuffer(_imguiCommandBuffers[i]);
+
+
+	//	/*uint32_t framesInFlight = Renderer::GetConfig().FramesInFlight;
+	//	s_ImGuiCommandBuffers.resize(framesInFlight);
+	//	for (uint32_t i = 0; i < framesInFlight; i++)
+	//		s_ImGuiCommandBuffers[i] = VulkanContext::GetCurrentDevice()->CreateSecondaryCommandBuffer("ImGuiSecondaryCoommandBuffer");*/
+	//}
 
 	void VulkanContext::FlushCommandBuffer(VkCommandBuffer commandBuffer/*, VkQueue queue*/)
 	{
