@@ -51,7 +51,7 @@ project "KantoEngine"
 		--"%{IncludeDir.msdfgen}",
 		--"%{IncludeDir.msdf_atlas_gen}",
 		"%{IncludeDir.stb_image}",
-		--"%{IncludeDir.entt}",
+		"%{IncludeDir.entt}",
 		--"%{IncludeDir.mono}",
 		--"%{IncludeDir.yaml_cpp}",
 		--"%{IncludeDir.ImGuizmo}",

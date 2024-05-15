@@ -2,6 +2,7 @@
 #include "Kanto.h"
 //main function is in entry point
 #include "Kanto/Core/EntryPoint.h"
+#include <entt/include/entt/entt.hpp>
 
 namespace Kanto
 {
@@ -26,6 +27,8 @@ namespace Kanto
 		spec.Name = "Sandbox";
 		spec.WorkingDirectory = "../KantoEngine";
 		//spec.CommandLineArgs = args;
+		entt::registry reg;
+		entt::entity entity = reg.create();
 
 		return new Sandbox(spec);
 	}
