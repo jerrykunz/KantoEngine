@@ -42,7 +42,7 @@ project "KantoEngine"
 		"%{IncludeDir.tracy}",
 		"%{IncludeDir.nfd}",
 		"%{IncludeDir.yaml}",
-		--"%{IncludeDir.Box2D}",
+		"%{IncludeDir.Box2D}",
 		--"%{IncludeDir.filewatch}",
 		"%{IncludeDir.GLFW}",
 		--"%{IncludeDir.Glad}",
@@ -62,6 +62,7 @@ project "KantoEngine"
 	--should be the same as the dependency project name in VS, capitalization doesn't seem to matter (tracy vs Tracy)
 	links
 	{
+		"Box2D",
 		"GLFW",
 		"NFD-Extended",
 		"Tracy",

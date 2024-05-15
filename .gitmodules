@@ -16,3 +16,6 @@
 [submodule "KantoEngine/vendor/NFD-Extended/NFD-Extended"]
 	path = KantoEngine/vendor/NFD-Extended/NFD-Extended
 	url = https://github.com/btzy/nativefiledialog-extended.git
+[submodule "KantoEngine/vendor/Box2D"]
+	path = KantoEngine/vendor/Box2D
+	url = https://github.com/jerrykunz/box2d.git

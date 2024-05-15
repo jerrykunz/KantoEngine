@@ -26,7 +26,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 	include "vendor/premake"
-	--include "KantoEngine/vendor/Box2D"
+	include "KantoEngine/vendor/Box2D"
 	include "KantoEngine/vendor/GLFW"
 	include "KantoEngine/vendor/NFD-Extended"
 	include "KantoEngine/vendor/Glad"
