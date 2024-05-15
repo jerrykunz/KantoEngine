@@ -9,7 +9,6 @@
 #define IMGUI_IMPL_API
 #endif
 #include "backends/imgui_impl_glfw.h"
-//#include "examples/imgui_impl_vulkan_with_textures.h"
 #include "backends/imgui_impl_vulkan.h"
 
 #include "Kanto/Core/Application.h"
@@ -115,7 +114,7 @@ namespace Kanto
 			robotoBoldTitle.Size = 16.0f;
 			UI::Fonts::Add(robotoBoldTitle);
 		}
-		/*
+		
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
 		SetDarkThemeV2Colors();
@@ -128,7 +127,7 @@ namespace Kanto
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 		style.Colors[ImGuiCol_WindowBg] = ImVec4(0.15f, 0.15f, 0.15f, style.Colors[ImGuiCol_WindowBg].w);
-		*/
+		
 		VulkanImGuiLayer* instance = this;
 
 		Application& app = Application::Get();
@@ -164,16 +163,8 @@ namespace Kanto
 
 		// Setup Platform/Renderer bindings
 		ImGui_ImplGlfw_InitForVulkan(window, true);
-
-
-
 		ImGui_ImplVulkan_InitInfo init_info = {};
-
-		//for normal renderpass
-		init_info.MSAASamples = vulkanContext->PhysicalDevice->MsaaSamples; //added by J
-		//for imgui renderpass
-		//init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT; //VulkanContext::Get()->PhysicalDevice->MsaaSamples; //added by J
-
+		init_info.MSAASamples = vulkanContext->PhysicalDevice->MsaaSamples;
 		init_info.Instance = vulkanContext->Instance; //VulkanContext::GetInstance();
 		init_info.PhysicalDevice = vulkanContext->PhysicalDevice->Device; //VulkanContext::GetCurrentDevice()->GetPhysicalDevice()->GetVulkanPhysicalDevice();
 		init_info.Device = device;
@@ -198,7 +189,7 @@ namespace Kanto
 		if (true)
 		{
 			//new version
-			//not really necessary
+			//works without this too
 			ImGui_ImplVulkan_CreateFontsTexture();
 
 			//old
