@@ -40,6 +40,16 @@
 #include <backends/imgui_impl_vulkan.h>
 #include <backends/imgui_impl_glfw.h>
 
+#include <box2d/b2_world.h>
+#include <box2d/b2_body.h>
+#include <box2d/b2_fixture.h>
+#include <box2d/b2_polygon_shape.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 extern bool g_ApplicationRunning;
 extern ImGuiContext* GImGui;
 namespace Kanto
@@ -201,6 +211,52 @@ namespace Kanto
 		float prevMouseX = 0;
 		float prevMouseY = 0;
 
+
+
+
+		//box2d test
+		float minusValue = 0.75f;
+		b2World* world = new b2World({ 0.0f, -9.8f });
+
+		b2BodyDef bodyDef;
+		bodyDef.type = b2_dynamicBody;
+		bodyDef.position.Set(0.0f, 0.0f);
+		bodyDef.angle = 0.0f;
+		b2Body* body = world->CreateBody(&bodyDef);
+		body->SetFixedRotation(true);
+
+		b2PolygonShape boxShape;
+		boxShape.SetAsBox(0.5f - boxShape.m_radius * minusValue, 0.5f - boxShape.m_radius * minusValue);
+
+		b2FixtureDef fixtureDef;
+		fixtureDef.shape = &boxShape;
+		fixtureDef.density = 1.0f;
+		fixtureDef.friction = 1.0f;
+		fixtureDef.restitution = 0.0f;
+		fixtureDef.restitutionThreshold = 1.0f;
+
+		body->CreateFixture(&fixtureDef);
+
+		b2BodyDef staticBodyDef;
+		staticBodyDef.type = b2_staticBody;
+		staticBodyDef.position.Set(0.0f, -2.0f);
+		staticBodyDef.angle = 0.0f;
+		b2Body* staticBody = world->CreateBody(&staticBodyDef);
+
+		b2PolygonShape staticBoxShape;
+		staticBoxShape.SetAsBox(0.5f - staticBoxShape.m_radius * minusValue, 0.5f - staticBoxShape.m_radius * minusValue); // Set the box dimensions
+
+		b2FixtureDef staticFixtureDef;
+		staticFixtureDef.shape = &staticBoxShape;
+		staticFixtureDef.friction = 1.0f;
+		staticFixtureDef.restitution = 0.0f;
+		staticFixtureDef.restitutionThreshold = 1.0f;
+
+		staticBody->CreateFixture(&staticFixtureDef);
+
+
+
+
 		//LOOP START
 		while (m_Running)
 		{
@@ -231,6 +287,9 @@ namespace Kanto
 				viewProjUBO->proj = camera.matrices.perspective;
 				viewProjUBO->view = camera.matrices.view;
 
+
+				world->Step(deltaTime, 6, 2);
+
 				rendererContext->BeginFrame();
 				rendererContext->BeginScene();
 
@@ -251,6 +310,49 @@ namespace Kanto
 					glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
 					glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
 					glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+
+				{
+					b2Vec2 b2Position = body->GetPosition();
+					float b2Angle = body->GetAngle();
+					glm::vec3 position(b2Position.x, b2Position.y, 0.0f); // Box2D is 2D, so z is 0
+					glm::quat rotation = glm::angleAxis(b2Angle, glm::vec3(0.0f, 0.0f, 1.0f)); // Rotate around z-axis
+
+					glm::mat4 transform = glm::mat4(1.0f); // Identity matrix
+					transform = glm::translate(transform, position); // Apply translation
+					transform *= glm::toMat4(rotation); // Apply rotation
+
+					glm::vec3 scale(1.0f, 1.0f, 0.0f); // Box2D is 2D, so z is 0
+					transform = glm::scale(transform, scale);
+
+					glm::vec4 color(1.0f, 0.0f, 0.0f, 1.0f); // Example color (red)
+
+					rendererContext->RenderQuad(transform, color);
+
+
+					b2Vec2 sb2Position = staticBody->GetPosition();
+					float sb2Angle = staticBody->GetAngle();
+					glm::vec3 sposition(sb2Position.x, sb2Position.y, 0.0f); // Box2D is 2D, so z is 0
+					glm::quat srotation = glm::angleAxis(sb2Angle, glm::vec3(0.0f, 0.0f, 1.0f)); // Rotate around z-axis
+
+					glm::mat4 stransform = glm::mat4(1.0f); // Identity matrix
+					stransform = glm::translate(stransform, sposition); // Apply translation
+					stransform *= glm::toMat4(srotation); // Apply rotation
+
+					glm::vec3 sscale(1.0f, 1.0f, 0.0f); // Box2D is 2D, so z is 0
+					stransform = glm::scale(stransform, sscale);
+
+					glm::vec4 scolor(1.0f, 1.0f, 0.0f, 1.0f); // Example color (red)
+
+					rendererContext->RenderQuad(stransform, scolor);
+
+					auto v1 = body->GetPosition();
+					auto v2 = staticBody->GetPosition();
+					int a = 3;
+
+				}
+
+
 
 
 				//test
