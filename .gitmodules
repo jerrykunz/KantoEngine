@@ -19,3 +19,6 @@
 [submodule "KantoEngine/vendor/Box2D"]
 	path = KantoEngine/vendor/Box2D
 	url = https://github.com/jerrykunz/box2d.git
+[submodule "KantoEngine/vendor/msdf-atlas-gen"]
+	path = KantoEngine/vendor/msdf-atlas-gen
+	url = https://github.com/jerrykunz/msdf-atlas-gen

@@ -212,15 +212,19 @@ namespace Kanto
 		float prevMouseY = 0;
 
 
-
+		VulkanImage circleTexture("textures/perfectcircle.png",
+			rendererContext->PhysicalDevice->Device,
+			*rendererContext->Device,
+			rendererContext->CommandPool,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		//box2d test
-		float minusValue = 0.75f;
+		float minusValue = 1.0f;
 		b2World* world = new b2World({ 0.0f, -9.8f });
 
 		b2BodyDef bodyDef;
 		bodyDef.type = b2_dynamicBody;
-		bodyDef.position.Set(0.0f, 0.0f);
+		bodyDef.position.Set(0.0f, 10.0f);
 		bodyDef.angle = 0.0f;
 		b2Body* body = world->CreateBody(&bodyDef);
 		body->SetFixedRotation(true);
@@ -232,7 +236,7 @@ namespace Kanto
 		fixtureDef.shape = &boxShape;
 		fixtureDef.density = 1.0f;
 		fixtureDef.friction = 1.0f;
-		fixtureDef.restitution = 0.0f;
+		fixtureDef.restitution = 0.8f;
 		fixtureDef.restitutionThreshold = 1.0f;
 
 		body->CreateFixture(&fixtureDef);
@@ -249,7 +253,7 @@ namespace Kanto
 		b2FixtureDef staticFixtureDef;
 		staticFixtureDef.shape = &staticBoxShape;
 		staticFixtureDef.friction = 1.0f;
-		staticFixtureDef.restitution = 0.0f;
+		staticFixtureDef.restitution = 0.8f;
 		staticFixtureDef.restitutionThreshold = 1.0f;
 
 		staticBody->CreateFixture(&staticFixtureDef);
@@ -342,9 +346,10 @@ namespace Kanto
 					glm::vec3 sscale(1.0f, 1.0f, 0.0f); // Box2D is 2D, so z is 0
 					stransform = glm::scale(stransform, sscale);
 
-					glm::vec4 scolor(1.0f, 1.0f, 0.0f, 1.0f); // Example color (red)
+					glm::vec4 scolor(1.0f, 1.0f, 0.0f, 1.0f); 
 
-					rendererContext->RenderQuad(stransform, scolor);
+					//rendererContext->RenderQuad(stransform, scolor);
+					rendererContext->RenderQuad(stransform, circleTexture, 1.0f, scolor, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f));
 
 					auto v1 = body->GetPosition();
 					auto v2 = staticBody->GetPosition();

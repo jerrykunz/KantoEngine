@@ -23,8 +23,8 @@ IncludeDir["entt"] = "%{wks.location}/KantoEngine/vendor/entt/include"
 --IncludeDir["shaderc"] = "%{wks.location}/KantoEngine/vendor/shaderc/include"
 --IncludeDir["SPIRV_Cross"] = "%{wks.location}/KantoEngine/vendor/SPIRV-Cross"
 IncludeDir["VulkanSDK"] = "%{VULKAN_SDK}/Include"
---IncludeDir["msdfgen"] = "%{wks.location}/KantoEngine/vendor/msdf-atlas-gen/msdfgen"
---IncludeDir["msdf_atlas_gen"] = "%{wks.location}/KantoEngine/vendor/msdf-atlas-gen/msdf-atlas-gen"
+IncludeDir["msdfgen"] = "%{wks.location}/KantoEngine/vendor/msdf-atlas-gen/msdfgen"
+IncludeDir["msdf_atlas_gen"] = "%{wks.location}/KantoEngine/vendor/msdf-atlas-gen/msdf-atlas-gen"
 
 LibraryDir = {}
 
