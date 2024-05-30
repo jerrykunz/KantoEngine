@@ -15,6 +15,9 @@
 #include "backends/imgui_impl_vulkan.h"
 //#include "examples/imgui_impl_vulkan_with_textures.h"
 
+#include "Kanto/Renderer/UI/MSDFData.h"
+#include <codecvt>
+
 
 
 namespace Kanto
@@ -39,6 +42,9 @@ namespace Kanto
 
 		_textureSlots.resize(_maxTextures);
 		_textureIndex = 0;
+
+		_fontTextureSlots.resize(_maxFontTextures);
+		_fontTextureIndex = 0;
 
 		InitializeInstance(applicationName, engineName);
 		InitializeDebugMessenger();
@@ -66,6 +72,7 @@ namespace Kanto
 			Device,
 			SwapChain->SwapChainImageFormat);
 
+		//useless, remove at some point
 		CreateImguiRenderPass(PhysicalDevice,
 			Device,
 			SwapChain->SwapChainImageFormat);
@@ -116,6 +123,17 @@ namespace Kanto
 			VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
 			VK_POLYGON_MODE_FILL);
 
+		_textPipeline = new VulkanPipeline(Device->Device,
+			RenderPass,
+			PhysicalDevice->MsaaSamples,
+			_descriptorSetLayout,
+			"shaders/text2dvert.spv",
+			"shaders/text2dfrag.spv",
+			TextVertex::getBindingDescription(),
+			TextVertex::getAttributeDescriptions(),
+			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			VK_POLYGON_MODE_FILL);
+
 
 		CreateCommandPool();
 
@@ -133,6 +151,7 @@ namespace Kanto
 		CreateSyncObjects();
 		InitQuadRendering();
 		InitLineRendering();
+		InitTextRendering();
 	}
 
 	VulkanContext::~VulkanContext()
@@ -227,6 +246,58 @@ namespace Kanto
 			CommandPool);
 	}
 
+	void VulkanContext::InitTextRendering()
+	{
+		/*uint32_t white = 0xffffffff;
+		WhiteTexture = new VulkanImage(&white, PhysicalDevice->Device, *Device, CommandPool, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);*/
+		//_fontTextureSlots[_textureIndex] = WhiteTexture;
+		//_fontTextureIndex++; //1 after this
+
+		_maxTextVertices = 40000;
+		_maxTextIndices = 60000;
+
+		TextVertexCount = 0;
+		TextIndexCount = 0;
+
+		TextVertexBuffer.resize(MaxFramesInFlight);
+		TextVertices.resize(MaxFramesInFlight);
+
+		for (int i = 0; i < MaxFramesInFlight; i++)
+		{
+			TextVertexBuffer[i] = VulkanVertexBuffer();
+			TextVertices[i] = new TextVertex[_maxTextVertices];
+		}
+
+		_textVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
+		_textVertexPositions[1] = { -0.5f,  0.5f, 0.0f, 1.0f };
+		_textVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
+		_textVertexPositions[3] = { 0.5f, -0.5f, 0.0f, 1.0f };
+
+
+
+		TextIndexBuffer = VulkanIndexBuffer();
+		std::vector<uint32_t> textIndices(_maxTextIndices);
+		uint32_t offset = 0;
+		for (uint32_t i = 0; i < _maxTextIndices; i += 6)
+		{
+			textIndices[i + 0] = offset + 0;
+			textIndices[i + 1] = offset + 1;
+			textIndices[i + 2] = offset + 2;
+			
+			textIndices[i + 3] = offset + 2;
+			textIndices[i + 4] = offset + 3;
+			textIndices[i + 5] = offset + 0;
+
+			offset += 4;
+		}
+		TextIndexBuffer.LoadIndices(textIndices,
+			PhysicalDevice->Device,
+			Device->Device,
+			Device->GraphicsQueue,
+			CommandPool);
+	
+	}
+
 	void VulkanContext::BeginFrame()
 	{
 		vkWaitForFences(Device->Device, 1, &_inFlightFences[CurrentFrame], VK_TRUE, UINT64_MAX);
@@ -306,7 +377,6 @@ namespace Kanto
 		{
 			vkCmdBindPipeline(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->Pipeline  /*_GraphicsPipeline2DQuad*/);
 
-			//moved here, still causes errors
 			UpdateTextureDescriptorSets();
 
 			vkCmdBindDescriptorSets(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->PipelineLayout /*_pipelineLayout2DQuad*/, 0, 1, &_descriptorSets[CurrentFrame], 0, nullptr);
@@ -335,6 +405,44 @@ namespace Kanto
 			QuadIndexCount = 0;
 		}
 		//END 2D quad rendering END
+
+
+
+		//2D text rendering
+		if (TextVertexCount > 0 && false)
+		{
+			vkCmdBindPipeline(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _textPipeline->Pipeline);
+
+			//moved here, still causes errors
+			//UpdateFontTextureDescriptorSets();
+			UpdateTextureDescriptorSets();
+
+			vkCmdBindDescriptorSets(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _textPipeline->PipelineLayout /*_pipelineLayout2DQuad*/, 0, 1, &_descriptorSets[CurrentFrame], 0, nullptr);
+
+			TextVertexBuffer[CurrentFrame].LoadVertices(TextVertices[CurrentFrame],
+				TextVertexCount,
+				PhysicalDevice->Device,
+				Device->Device,
+				Device->GraphicsQueue,
+				CommandPool);
+
+			VkBuffer vertexBuffers[] = { TextVertexBuffer[CurrentFrame].VertexBuffer };
+			VkDeviceSize offsets[] = { 0 };
+			vkCmdBindVertexBuffers(CommandBuffers[CurrentFrame], 0, 1, vertexBuffers, offsets);
+
+			vkCmdBindIndexBuffer(CommandBuffers[CurrentFrame], TextIndexBuffer.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+			vkCmdDrawIndexed(CommandBuffers[CurrentFrame],
+				static_cast<uint32_t>(TextIndexCount * sizeof(uint32_t)),
+				1,
+				0,
+				0,
+				0);
+
+			TextVertexCount = 0;
+			TextIndexCount = 0;
+		}
+		//END 2D text rendering END
 
 		//2d line rendering
 		if (LineVertexCount > 0)
@@ -1242,6 +1350,34 @@ namespace Kanto
 		vkUpdateDescriptorSets(Device->Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}
 
+	void VulkanContext::UpdateFontTextureDescriptorSets()
+	{
+		std::vector<VkDescriptorImageInfo> imageDescriptors(_maxFontTextures);
+		for (int j = 0; j < _fontTextureIndex; j++)
+		{
+			imageDescriptors[j] = _fontTextureSlots[j]->Descriptor;
+		}
+
+		if (_fontTextureIndex < _maxFontTextures)
+		{
+			for (int j = _fontTextureIndex; j < _maxFontTextures; j++)
+			{
+				imageDescriptors[j] = _fontTextureSlots[0]->Descriptor; //use this as a test default
+			}
+		}
+
+		std::vector<VkWriteDescriptorSet> descriptorWrites(1);
+		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrites[0].dstSet = _descriptorSets[CurrentFrame]; //Only updates the currentframe, otherwise errors accessing data that's being rendered
+		descriptorWrites[0].dstBinding = 2; //next available binding after ubs
+		descriptorWrites[0].dstArrayElement = 0;
+		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrites[0].descriptorCount = _maxFontTextures;
+		descriptorWrites[0].pImageInfo = imageDescriptors.data();
+
+		vkUpdateDescriptorSets(Device->Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+	}
+
 	void VulkanContext::RenderQuad(const glm::mat4& transform, const glm::vec4& color)
 	{
 		//constexpr size_t quadVertexCount = 4;
@@ -1357,7 +1493,237 @@ namespace Kanto
 		QuadIndexCount += 6;
 	}
 
-	
+	static bool NextLine(int index, const std::vector<int>& lines)
+	{
+		for (int line : lines)
+		{
+			if (line == index)
+				return true;
+		}
+		return false;
+	}
+
+	void VulkanContext::DrawString(const std::string& string, const glm::vec3& position, float maxWidth, const glm::vec4& color)
+	{
+		// Use default font
+		DrawString(string, Font::GetDefaultFont(), position, maxWidth, color);
+	}
+
+	void VulkanContext::DrawString(const std::string& string, const Ref<Font>& font, const glm::vec3& position, float maxWidth, const glm::vec4& color)
+	{
+		DrawString(string, font, glm::translate(glm::mat4(1.0f), position), maxWidth, color);
+	}
+
+	// warning C4996: 'std::codecvt_utf8<char32_t,1114111,(std::codecvt_mode)0>': warning STL4017: std::wbuffer_convert, std::wstring_convert, and the <codecvt> header
+	// (containing std::codecvt_mode, std::codecvt_utf8, std::codecvt_utf16, and std::codecvt_utf8_utf16) are deprecated in C++17. (The std::codecvt class template is NOT deprecated.)
+	// The C++ Standard doesn't provide equivalent non-deprecated functionality; consider using MultiByteToWideChar() and WideCharToMultiByte() from <Windows.h> instead.
+	// You can define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING or _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS to acknowledge that you have received this warning.
+#pragma warning(disable : 4996)
+
+	// From https://stackoverflow.com/questions/31302506/stdu32string-conversion-to-from-stdstring-and-stdu16string
+	static std::u32string To_UTF32(const std::string& s)
+	{
+		std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+		return conv.from_bytes(s);
+	}
+
+#pragma warning(default : 4996)
+
+	void VulkanContext::DrawString(const std::string& string, const Ref<Font>& font, const glm::mat4& transform, float maxWidth, const glm::vec4& color, float lineHeightOffset, float kerningOffset)
+	{
+		if (string.empty())
+			return;
+
+		float textureIndex = -1.0f;
+
+		// TODO(Yan): this isn't really ideal, but we need to iterate through UTF-8 code points
+		std::u32string utf32string = To_UTF32(string);
+
+		Ref<VulkanImage> fontAtlas = font->GetFontAtlas();
+		KN_CORE_ASSERT(fontAtlas);
+
+		for (uint32_t i = 0; i < _fontTextureIndex; i++)
+		{
+			//if (*_fontTextureSlots[i].Raw() == *fontAtlas.Raw())
+			if (_fontTextureSlots[i] == fontAtlas.get())			
+			{
+				textureIndex = (float)i;
+				break;
+			}
+		}
+
+		if (textureIndex == -1.0f)
+		{
+			textureIndex = (float)_fontTextureIndex;
+			_fontTextureSlots[_fontTextureIndex] = fontAtlas.get();
+			_fontTextureIndex++;
+		}
+
+		auto& fontGeometry = font->GetMSDFData()->FontGeometry;
+		const auto& metrics = fontGeometry.getMetrics();
+
+		// TODO(Yan): these font metrics really should be cleaned up/refactored...
+		//            (this is a first pass WIP)
+		std::vector<int> nextLines;
+		{
+			double x = 0.0;
+			double fsScale = 1 / (metrics.ascenderY - metrics.descenderY);
+			double y = -fsScale * metrics.ascenderY;
+			int lastSpace = -1;
+			for (int i = 0; i < utf32string.size(); i++)
+			{
+				char32_t character = utf32string[i];
+				if (character == '\n')
+				{
+					x = 0;
+					y -= fsScale * metrics.lineHeight + lineHeightOffset;
+					continue;
+				}
+				if (character == '\r')
+					continue;
+
+				auto glyph = fontGeometry.getGlyph(character);
+				//if (!glyph)
+				//	glyph = fontGeometry.getGlyph('?');
+				if (!glyph)
+					continue;
+
+				if (character != ' ')
+				{
+					// Calc geo
+					double pl, pb, pr, pt;
+					glyph->getQuadPlaneBounds(pl, pb, pr, pt);
+					glm::vec2 quadMin((float)pl, (float)pb);
+					glm::vec2 quadMax((float)pr, (float)pt);
+
+					quadMin *= fsScale;
+					quadMax *= fsScale;
+					quadMin += glm::vec2(x, y);
+					quadMax += glm::vec2(x, y);
+
+					if (quadMax.x > maxWidth && lastSpace != -1)
+					{
+						i = lastSpace;
+						nextLines.emplace_back(lastSpace);
+						lastSpace = -1;
+						x = 0;
+						y -= fsScale * metrics.lineHeight + lineHeightOffset;
+					}
+				}
+				else
+				{
+					lastSpace = i;
+				}
+
+				double advance = glyph->getAdvance();
+				fontGeometry.getAdvance(advance, character, utf32string[i + 1]);
+				x += fsScale * advance + kerningOffset;
+			}
+		}
+
+		{
+			double x = 0.0;
+			double fsScale = 1 / (metrics.ascenderY - metrics.descenderY);
+			double y = 0.0;// -fsScale * metrics.ascenderY;
+			for (int i = 0; i < utf32string.size(); i++)
+			{
+				char32_t character = utf32string[i];
+				if (character == '\n' || NextLine(i, nextLines))
+				{
+					x = 0;
+					y -= fsScale * metrics.lineHeight + lineHeightOffset;
+					continue;
+				}
+
+				auto glyph = fontGeometry.getGlyph(character);
+				//if (!glyph)
+				//	glyph = fontGeometry.getGlyph('?');
+				if (!glyph)
+					continue;
+
+				double l, b, r, t;
+				glyph->getQuadAtlasBounds(l, b, r, t);
+
+				double pl, pb, pr, pt;
+				glyph->getQuadPlaneBounds(pl, pb, pr, pt);
+
+				pl *= fsScale, pb *= fsScale, pr *= fsScale, pt *= fsScale;
+				pl += x, pb += y, pr += x, pt += y;
+
+				double texelWidth = 1. / fontAtlas->Width;
+				double texelHeight = 1. / fontAtlas->Height;
+				l *= texelWidth, b *= texelHeight, r *= texelWidth, t *= texelHeight;
+
+				// ImGui::Begin("Font");
+				// ImGui::Text("Size: %d, %d", m_ExampleFontSheet->GetWidth(), m_ExampleFontSheet->GetHeight());
+				// UI::Image(m_ExampleFontSheet, ImVec2(m_ExampleFontSheet->GetWidth(), m_ExampleFontSheet->GetHeight()), ImVec2(0, 1), ImVec2(1, 0));
+				// ImGui::End();
+
+
+				for (size_t i = 0; i < 4; i++)
+				{
+					size_t index = TextVertexCount + i;
+					TextVertices[CurrentFrame][index].pos = transform * _quadVertexPositions[i];
+					TextVertices[CurrentFrame][index].color = color;
+					TextVertices[CurrentFrame][index].texCoord = { l, b };
+					TextVertices[CurrentFrame][index].texIndex = textureIndex;
+				}
+
+				TextVertexCount += 4;
+				TextIndexCount += 6;
+
+				double advance = glyph->getAdvance();
+				fontGeometry.getAdvance(advance, character, utf32string[i + 1]);
+				x += fsScale * advance + kerningOffset;
+
+				//m_DrawStats.QuadCount++;
+
+
+
+				/*auto& bufferPtr = GetWriteableTextBuffer();
+				bufferPtr->Position = transform * glm::vec4(pl, pb, 0.0f, 1.0f);
+				bufferPtr->Color = color;
+				bufferPtr->TexCoord = { l, b };
+				bufferPtr->TexIndex = textureIndex;
+				bufferPtr++;
+
+				bufferPtr->Position = transform * glm::vec4(pl, pt, 0.0f, 1.0f);
+				bufferPtr->Color = color;
+				bufferPtr->TexCoord = { l, t };
+				bufferPtr->TexIndex = textureIndex;
+				bufferPtr++;
+
+				bufferPtr->Position = transform * glm::vec4(pr, pt, 0.0f, 1.0f);
+				bufferPtr->Color = color;
+				bufferPtr->TexCoord = { r, t };
+				bufferPtr->TexIndex = textureIndex;
+				bufferPtr++;
+
+				bufferPtr->Position = transform * glm::vec4(pr, pb, 0.0f, 1.0f);
+				bufferPtr->Color = color;
+				bufferPtr->TexCoord = { r, b };
+				bufferPtr->TexIndex = textureIndex;
+				bufferPtr++;
+
+				TextIndexCount += 6;
+
+				double advance = glyph->getAdvance();
+				fontGeometry.getAdvance(advance, character, utf32string[i + 1]);
+				x += fsScale * advance + kerningOffset;*/
+
+				//m_DrawStats.QuadCount++;
+			}
+		}
+
+	}
+
+
+
+
+
+
+
+
 
 	std::vector<const char*> VulkanContext::GetRequiredExtensions()
 	{
@@ -1825,10 +2191,12 @@ namespace Kanto
 
 	VkFormat VulkanContext::FindDepthFormat(VkPhysicalDevice physicalDevice)
 	{
-		return FindSupportedFormat(physicalDevice,
+		DepthFormat = FindSupportedFormat(physicalDevice,
 			{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
 			VK_IMAGE_TILING_OPTIMAL,
 			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+		return DepthFormat;
 	}
 
 	VkFormat VulkanContext::FindSupportedFormat(VkPhysicalDevice physicalDevice,

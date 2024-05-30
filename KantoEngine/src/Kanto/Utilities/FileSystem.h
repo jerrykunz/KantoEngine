@@ -1,6 +1,7 @@
 #pragma once
-/*
+
 #include "Kanto/Core/Buffer.h"
+
 
 // NOTE(Peter): This is really just a workaround Microsoft being extremely dumb and thinking no one would ever use the name CreateDirectory, etc... for a method...
 //				If this causes any issues in the future we'll just remove these. I thought about renaming the methods, but that doesn't really work for DeleteFile, MoveFile or CopyFile
@@ -66,3 +67,4 @@ namespace Kanto {
 		static std::string GetEnvironmentVariable(const std::string& key);
 	};
 }
+

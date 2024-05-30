@@ -14,6 +14,10 @@ project "KantoEngine"
 	{
 		"src/**.h",
 		"src/**.cpp",
+
+		"Platform/" .. firstToUpper(os.target()) .. "/**.hpp",
+		"Platform/" .. firstToUpper(os.target()) .. "/**.cpp",
+
 		"vendor/stb_image/**.h",
 		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
@@ -48,8 +52,8 @@ project "KantoEngine"
 		--"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.glm}",
-		--"%{IncludeDir.msdfgen}",
-		--"%{IncludeDir.msdf_atlas_gen}",
+		"%{IncludeDir.msdfgen}",
+		"%{IncludeDir.msdf_atlas_gen}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
 		--"%{IncludeDir.mono}",
@@ -68,7 +72,9 @@ project "KantoEngine"
 		"Tracy",
 		--"Glad",
 		"ImGui",
-		"%{Library.Vulkan}"
+		"%{Library.Vulkan}",
+		"msdf-atlas-gen",
+		"msdfgen"
 	}
 
 	--filter "files:vendor/ImGuizmo/**.cpp"

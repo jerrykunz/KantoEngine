@@ -1,6 +1,11 @@
 
 -- KantoEngine Dependencies
 
+-- Utility function for converting the first character to uppercase
+function firstToUpper(str)
+	return (str:gsub("^%l", string.upper))
+end
+
 VULKAN_SDK = os.getenv("VULKAN_SDK")
 
 IncludeDir = {}

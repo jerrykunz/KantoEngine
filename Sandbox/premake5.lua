@@ -25,7 +25,9 @@ project "Sandbox"
 		"%{IncludeDir.ImGui}",
 		"%{wks.location}/KantoEngine/vendor/GLFW/include",
 		"%{IncludeDir.VulkanSDK}",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.msdfgen}",
+		"%{IncludeDir.msdf_atlas_gen}",
 	}
 
 	links

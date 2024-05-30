@@ -3,7 +3,7 @@
 	/* Windows x64/x86 */
 #ifdef _WIN64
 	/* Windows x64  */
-#define KN_PLATFORM_WINDOWS
+#define KN_PLATFORM_WINDOWS 1
 #else
 	/* Windows x86 */
 #error "x86 Builds are not supported!"

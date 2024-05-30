@@ -1,9 +1,8 @@
 #pragma once
 
 #include <memory>
+#include "Ref.h"
 
-//refs are here in Base.h
-//#include "Ref.h"
 
 namespace Kanto 
 {

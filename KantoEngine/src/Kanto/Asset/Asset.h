@@ -1,5 +1,5 @@
 #pragma once
-/*
+
 #include "Kanto/Core/UUID.h"
 #include "Kanto/Asset/AssetTypes.h"
 

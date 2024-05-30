@@ -50,6 +50,8 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "Kanto/Renderer/UI/Font.h"
+
 extern bool g_ApplicationRunning;
 extern ImGuiContext* GImGui;
 namespace Kanto
@@ -258,7 +260,9 @@ namespace Kanto
 
 		staticBody->CreateFixture(&staticFixtureDef);
 
+		Font::Init();
 
+		Ref<Font> defaultFont = Font::GetDefaultFont();
 
 
 		//LOOP START
@@ -315,6 +319,7 @@ namespace Kanto
 					glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
 					glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
+				rendererContext->DrawString("KIPSU", glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 				{
 					b2Vec2 b2Position = body->GetPosition();

@@ -13,6 +13,55 @@ namespace Kanto
 		vkFreeMemory(*_device, TextureImageMemory, nullptr);
 	}
 
+	VulkanImage::VulkanImage(const void* pixels, int texWidth, int texHeight, VkPhysicalDevice& physicalDevice, VulkanDevice& device, VkCommandPool& commandPool, VkImageLayout imageLayout)
+	{
+		_device = &device.Device;
+
+		Descriptor.imageLayout = imageLayout;
+
+		Width = texWidth;
+		Height = texHeight;
+
+		//int texWidth, texHeight, texChannels;
+		//stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+
+		VkDeviceSize imageSize = texWidth * texHeight * 4;
+		_mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+
+		if (!pixels)
+		{
+			throw std::runtime_error("failed to load texture image!");
+		}
+
+		//TEST
+		//FinishImage(pixels, texWidth, texHeight, physicalDevice, device, commandPool, imageLayout);
+
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+		CreateBuffer(physicalDevice, device.Device, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+		void* data;
+		vkMapMemory(device.Device, stagingBufferMemory, 0, imageSize, 0, &data);
+		memcpy(data, pixels, static_cast<size_t>(imageSize));
+		vkUnmapMemory(device.Device, stagingBufferMemory);
+
+		//stbi_image_free(pixels);
+
+		CreateImage(physicalDevice, device.Device, texWidth, texHeight, _mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, TextureImage, TextureImageMemory);
+
+		TransitionImageLayout(device, commandPool, TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, _mipLevels);
+		CopyBufferToImage(device, commandPool, stagingBuffer, TextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		//transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+
+		vkDestroyBuffer(device.Device, stagingBuffer, nullptr);
+		vkFreeMemory(device.Device, stagingBufferMemory, nullptr);
+
+		GenerateMipmaps(physicalDevice, device, commandPool, TextureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, _mipLevels);
+
+		CreateImageView(TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, _mipLevels);
+		CreateTextureSampler(physicalDevice);
+	}
+
 	VulkanImage::VulkanImage(const std::string& path,
 		VkPhysicalDevice& physicalDevice,
 		VulkanDevice& device,
@@ -27,6 +76,9 @@ namespace Kanto
 		stbi_uc* pixels = stbi_load(path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 		VkDeviceSize imageSize = texWidth * texHeight * 4;
 		_mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+
+		Width = texWidth;
+		Height = texHeight;
 
 		if (!pixels)
 		{
@@ -105,6 +157,8 @@ namespace Kanto
 		CreateImageView(TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, _mipLevels);
 		CreateTextureSampler(physicalDevice);
 	}
+
+	
 
 	void VulkanImage::FinishImage(unsigned char* pixels,
 		int texWidth,

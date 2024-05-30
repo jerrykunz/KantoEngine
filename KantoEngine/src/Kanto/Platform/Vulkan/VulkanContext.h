@@ -29,11 +29,12 @@
 //#include "VulkanModel.h"
 //#include "Kanto/Core/Input.h"
 #include <glm/gtx/matrix_decompose.hpp>
+#include <Kanto/Renderer/UI/Font.h>
 
 
 namespace Kanto
 {
-	class VulkanContext
+	class VulkanContext //: public RefCounted
 	{
 	private:
 		bool _enableValidationLayers;
@@ -42,6 +43,11 @@ namespace Kanto
 		const uint32_t _maxTextures = 32;
 		uint32_t _textureIndex = 0;
 		std::vector<VulkanImage*> _textureSlots;
+
+		const uint32_t _maxFontTextures = 32;
+		uint32_t _fontTextureIndex = 0;
+		std::vector<VulkanImage*> _fontTextureSlots;
+
 
 		VkDebugUtilsMessengerEXT _debugMessenger;
 
@@ -65,6 +71,7 @@ namespace Kanto
 
 		VulkanPipeline* _quadPipeline;
 		VulkanPipeline* _linePipeline;
+		VulkanPipeline* _textPipeline;
 
 		//INSTANCE
 		bool CheckValidationLayerSupport();
@@ -140,6 +147,7 @@ namespace Kanto
 		VkSurfaceKHR Surface;
 		VkRenderPass RenderPass;
 		VkRenderPass RenderPassImgui;
+		VkFormat DepthFormat;
 
 		VkCommandPool CommandPool;
 
@@ -185,6 +193,20 @@ namespace Kanto
 		uint32_t _maxLineVertices;
 		uint32_t _maxLineIndices;
 
+		//Text rendering
+		glm::vec4 _textVertexPositions[4];
+
+		std::vector<VulkanVertexBuffer> TextVertexBuffer;
+		std::vector<TextVertex*> TextVertices;
+
+		uint32_t TextVertexCount;
+		uint32_t TextIndexCount;
+
+		VulkanIndexBuffer TextIndexBuffer;
+
+		uint32_t _maxTextVertices;
+		uint32_t _maxTextIndices;
+
 
 		VulkanContext(GLFWwindow* window, const std::string& applicationName, const std::string& engineName, bool vsync);
 		~VulkanContext();
@@ -193,15 +215,22 @@ namespace Kanto
 
 		void InitQuadRendering();
 		void InitLineRendering();
+		void InitTextRendering();
 
 		//DescriptorSets
 		void CreateDescriptorSets();
 		void UpdateTextureDescriptorSets();
+		void UpdateFontTextureDescriptorSets();
 
 		void RenderQuad(const glm::mat4& transform, const glm::vec4& color);
 		void RenderQuad(const glm::mat4& transform, VulkanImage& texture, float tilingFactor, const glm::vec4& tintColor, glm::vec2 uv0, glm::vec2 uv1);
 		void RenderLine(const glm::vec3 p1, const glm::vec3 p2, const glm::vec4& color1, const glm::vec4& color2);
 		void RenderQuadLine(glm::vec3 start, glm::vec3 end, float width, glm::vec4 startColor1, glm::vec4 startColor2, glm::vec4 endColor1, glm::vec4 endColor2);
+
+		void DrawString(const std::string& string, const glm::vec3& position, float maxWidth, const glm::vec4& color);
+		void DrawString(const std::string& string, const Ref<Font>& font, const glm::vec3& position, float maxWidth, const glm::vec4& color);
+		void DrawString(const std::string& string, const Ref<Font>& font, const glm::mat4& transform, float maxWidth, const glm::vec4& color = glm::vec4(1.0f), float lineHeightOffset = 0.0f, float kerningOffset = 0.0f);
+
 
 		void BeginFrame();		
 		void BeginScene();

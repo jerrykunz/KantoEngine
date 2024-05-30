@@ -38,9 +38,12 @@ namespace Kanto
 		VkDeviceMemory TextureImageMemory;
 		VkSampler TextureSampler;
 		VkDescriptorImageInfo Descriptor;
+		int Width;
+		int Height;
 
 		VulkanImage(const std::string& path, VkPhysicalDevice& physicalDevice, VulkanDevice& device, VkCommandPool& commandPool, VkImageLayout imageLayout);
 		VulkanImage(uint32_t* color, VkPhysicalDevice& physicalDevice, VulkanDevice& device, VkCommandPool& commandPool, VkImageLayout imageLayout);
+		VulkanImage(const void* pixels, int width, int height, VkPhysicalDevice& physicalDevice, VulkanDevice& device, VkCommandPool& commandPool, VkImageLayout imageLayout);
 		void FinishImage(unsigned char* pixels, int texWidth, int texHeight, VkPhysicalDevice& physicalDevice, VulkanDevice& device, VkCommandPool& commandPool, VkImageLayout imageLayout);
 		~VulkanImage();
 	};

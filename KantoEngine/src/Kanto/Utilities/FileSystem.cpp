@@ -1,5 +1,5 @@
 #include "knpch.h"
-/*
+
 #include "FileSystem.h"
 #include "StringUtils.h"
 
@@ -218,4 +218,4 @@ namespace Kanto {
 	}
 
 }
-*/
+
