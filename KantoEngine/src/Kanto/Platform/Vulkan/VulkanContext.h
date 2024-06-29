@@ -85,7 +85,8 @@ namespace Kanto
 		void DestroyDebugUtilsMessengerEXT(const VkAllocationCallbacks* pAllocator);
 
 		//Render pass
-		void CreateRenderPass(VulkanPhysicalDevice* physicalDevice,
+		void CreateRenderPass(VkRenderPass& renderPass,
+			VulkanPhysicalDevice* physicalDevice,
 			VulkanDevice* device,
 			VkFormat& swapChainImageFormat);
 		/*void CreateRenderPass2(VulkanPhysicalDevice* physicalDevice,
@@ -146,6 +147,7 @@ namespace Kanto
 		VkInstance Instance;
 		VkSurfaceKHR Surface;
 		VkRenderPass RenderPass;
+		VkRenderPass TextRenderPass;
 		VkRenderPass RenderPassImgui;
 		VkFormat DepthFormat;
 

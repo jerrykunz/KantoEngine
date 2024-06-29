@@ -68,14 +68,20 @@ namespace Kanto
 			PhysicalDevice->QueueIndices,
 			vsync);
 
-		CreateRenderPass(PhysicalDevice,
+		CreateRenderPass(RenderPass,
+			PhysicalDevice,
+			Device,
+			SwapChain->SwapChainImageFormat);
+
+		CreateRenderPass(TextRenderPass,
+			PhysicalDevice,
 			Device,
 			SwapChain->SwapChainImageFormat);
 
 		//useless, remove at some point
-		CreateImguiRenderPass(PhysicalDevice,
+		/*CreateImguiRenderPass(PhysicalDevice,
 			Device,
-			SwapChain->SwapChainImageFormat);
+			SwapChain->SwapChainImageFormat);*/
 
 		ViewProjectionUniformBuffer = new VulkanUniformBuffer(PhysicalDevice->Device,
 			Device->Device,
@@ -375,11 +381,11 @@ namespace Kanto
 		//2D quad rendering
 		if (QuadVertexCount > 0)
 		{
-			vkCmdBindPipeline(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->Pipeline  /*_GraphicsPipeline2DQuad*/);
+			vkCmdBindPipeline(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->Pipeline);
 
 			UpdateTextureDescriptorSets();
 
-			vkCmdBindDescriptorSets(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->PipelineLayout /*_pipelineLayout2DQuad*/, 0, 1, &_descriptorSets[CurrentFrame], 0, nullptr);
+			vkCmdBindDescriptorSets(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _quadPipeline->PipelineLayout, 0, 1, &_descriptorSets[CurrentFrame], 0, nullptr);
 
 			QuadVertexBuffer[CurrentFrame].LoadVertices(QuadVertices[CurrentFrame],
 				QuadVertexCount,
@@ -406,7 +412,26 @@ namespace Kanto
 		}
 		//END 2D quad rendering END
 
+		/*vkCmdEndRenderPass(CommandBuffers[CurrentFrame]);
 
+		VkRenderPassBeginInfo renderPassInfo2{};
+		renderPassInfo2.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo2.renderPass = TextRenderPass;
+		renderPassInfo2.framebuffer = FrameBuffer->SwapChainFramebuffers[ImageIndex];
+		renderPassInfo2.renderArea.offset = { 0, 0 };
+		renderPassInfo2.renderArea.extent = SwapChain->SwapChainExtent;
+
+		std::array<VkClearValue, 2> clearValues2{};
+		clearValues2[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+		clearValues2[1].depthStencil = { 1.0f, 0 };
+
+		renderPassInfo2.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo2.pClearValues = clearValues.data();
+
+
+		vkCmdBeginRenderPass(CommandBuffers[CurrentFrame], &renderPassInfo2, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdSetViewport(CommandBuffers[CurrentFrame], 0, 1, &viewport);
+		vkCmdSetScissor(CommandBuffers[CurrentFrame], 0, 1, &scissor);*/
 
 		//2D text rendering
 		if (TextVertexCount > 0 && false)
@@ -414,8 +439,7 @@ namespace Kanto
 			vkCmdBindPipeline(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _textPipeline->Pipeline);
 
 			//moved here, still causes errors
-			//UpdateFontTextureDescriptorSets();
-			UpdateTextureDescriptorSets();
+			UpdateFontTextureDescriptorSets();
 
 			vkCmdBindDescriptorSets(CommandBuffers[CurrentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, _textPipeline->PipelineLayout /*_pipelineLayout2DQuad*/, 0, 1, &_descriptorSets[CurrentFrame], 0, nullptr);
 
@@ -443,6 +467,8 @@ namespace Kanto
 			TextIndexCount = 0;
 		}
 		//END 2D text rendering END
+
+		//vkCmdEndRenderPass(CommandBuffers[CurrentFrame]);
 
 		//2d line rendering
 		if (LineVertexCount > 0)
@@ -1660,16 +1686,43 @@ namespace Kanto
 				// ImGui::End();
 
 
-				for (size_t i = 0; i < 4; i++)
+
+				/*for (size_t i = 0; i < 4; i++)
 				{
 					size_t index = TextVertexCount + i;
 					TextVertices[CurrentFrame][index].pos = transform * _quadVertexPositions[i];
 					TextVertices[CurrentFrame][index].color = color;
 					TextVertices[CurrentFrame][index].texCoord = { l, b };
 					TextVertices[CurrentFrame][index].texIndex = textureIndex;
-				}
+				}*/
 
-				TextVertexCount += 4;
+
+				TextVertexCount++;
+				TextVertices[CurrentFrame][TextVertexCount].pos = transform * glm::vec4(pl, pb, 0.0f, 1.0f);
+				TextVertices[CurrentFrame][TextVertexCount].color = color;
+				TextVertices[CurrentFrame][TextVertexCount].texCoord = { l, b };
+				TextVertices[CurrentFrame][TextVertexCount].texIndex = textureIndex;
+
+				TextVertexCount++;
+				TextVertices[CurrentFrame][TextVertexCount].pos = transform * glm::vec4(pl, pt, 0.0f, 1.0f);
+				TextVertices[CurrentFrame][TextVertexCount].color = color;
+				TextVertices[CurrentFrame][TextVertexCount].texCoord = { l, t };
+				TextVertices[CurrentFrame][TextVertexCount].texIndex = textureIndex;
+
+				TextVertexCount++;
+				TextVertices[CurrentFrame][TextVertexCount].pos = transform * glm::vec4(pr, pt, 0.0f, 1.0f);
+				TextVertices[CurrentFrame][TextVertexCount].color = color;
+				TextVertices[CurrentFrame][TextVertexCount].texCoord = { r, t };
+				TextVertices[CurrentFrame][TextVertexCount].texIndex = textureIndex;
+				
+				TextVertexCount++;
+				TextVertices[CurrentFrame][TextVertexCount].pos = transform * glm::vec4(pr, pb, 0.0f, 1.0f);
+				TextVertices[CurrentFrame][TextVertexCount].color = color;
+				TextVertices[CurrentFrame][TextVertexCount].texCoord = { r, b };
+				TextVertices[CurrentFrame][TextVertexCount].texIndex = textureIndex;
+
+
+				//TextVertexCount += 4;
 				TextIndexCount += 6;
 
 				double advance = glyph->getAdvance();
@@ -2011,7 +2064,8 @@ namespace Kanto
 	//	}
 	//}
 
-	void VulkanContext::CreateRenderPass(VulkanPhysicalDevice* physicalDevice,
+	void VulkanContext::CreateRenderPass(VkRenderPass& renderPass,
+		VulkanPhysicalDevice* physicalDevice,
 		VulkanDevice* device,
 		VkFormat& swapChainImageFormat)
 	{
@@ -2082,7 +2136,7 @@ namespace Kanto
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		if (vkCreateRenderPass(device->Device, &renderPassInfo, nullptr, &RenderPass) != VK_SUCCESS)
+		if (vkCreateRenderPass(device->Device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create render pass!");
 		}

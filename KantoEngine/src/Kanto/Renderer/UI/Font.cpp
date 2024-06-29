@@ -374,7 +374,8 @@ namespace Kanto {
 		Buffer storageBuffer;
 		AtlasHeader header;
 		void* pixels;
-		if (TryReadFontAtlasFromCache(m_Name, (float)config.emSize, header, pixels, storageBuffer))
+		//if (TryReadFontAtlasFromCache(m_Name, (float)config.emSize, header, pixels, storageBuffer))
+		if (false)
 		{
 			m_TextureAtlas = CreateCachedAtlas(header, pixels);
 			storageBuffer.Release();

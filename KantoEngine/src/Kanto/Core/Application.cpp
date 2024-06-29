@@ -262,8 +262,9 @@ namespace Kanto
 
 		Font::Init();
 
-		Ref<Font> defaultFont = Font::GetDefaultFont();
-
+		//Ref<Font> defaultFont = Font::GetDefaultFont();
+		Ref<Font> defaultFont = Font::GetDefaultMonoSpacedFont();
+		VulkanImage atlas = *defaultFont->GetFontAtlas().get();
 
 		//LOOP START
 		while (m_Running)
@@ -319,7 +320,14 @@ namespace Kanto
 					glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
 					glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
-				rendererContext->DrawString("KIPSU", glm::vec3(0.0f, 0.0f, 0.0f), 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+				rendererContext->RenderQuad(glm::mat4(1.0f),
+					atlas,
+					1.0f,
+					glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+					glm::vec2(0.0f, 0.0f),
+					glm::vec2(1.0f, 1.0f));
+
+				//rendererContext->DrawString("KIPSU", glm::vec3(0.0f, 0.0f, 0.0f), 100.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 				{
 					b2Vec2 b2Position = body->GetPosition();
